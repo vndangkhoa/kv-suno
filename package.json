@@ -1,0 +1,23 @@
+{
+  "name": "kv-suno",
+  "version": "2.0.0",
+  "description": "kv-suno — AI Music Streaming & Prompt Studio (Spotify Encore Web Player Edition)",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "suno",
+    "ai-music",
+    "prompt-engine"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

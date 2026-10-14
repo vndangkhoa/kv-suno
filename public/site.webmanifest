@@ -1,0 +1,64 @@
+{
+  "name": "kv-suno — AI Music Streaming & Prompt Studio",
+  "short_name": "kv-suno",
+  "description": "Không gian nghe nhạc Suno AI và sáng tạo Prompt Studio chuẩn Spotify với điều khiển màn hình khóa & phát nền.",
+  "id": "/",
+  "start_url": "/?mode=songs",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "vi",
+  "categories": ["music", "entertainment", "multimedia", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hot & Most Played Songs",
+      "short_name": "Hot Songs",
+      "description": "Stream the Top 50 Suno AI Chart",
+      "url": "/?mode=songs",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Creators Leaderboard",
+      "short_name": "Creators",
+      "description": "Explore Top 32 Vietnamese Suno Creators",
+      "url": "/?mode=creators",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Prompt Studio",
+      "short_name": "Studio",
+      "description": "Compose Suno AI Style Prompts & Lyrics",
+      "url": "/?mode=studio",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

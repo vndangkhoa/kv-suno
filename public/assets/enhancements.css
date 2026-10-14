@@ -1,0 +1,4536 @@
+/* ==========================================================================
+   kv-suno — Spotify Zen ("Pure Stream & Inspector") Architecture (v5.0)
+   3-Pane Detached Island Shell + 4-Mode Navigation Rail + Mode-Based Canvas
+   + Compact Right Track DNA & Lyrics Inspector + Native Audio Engine
+   ========================================================================== */
+
+:root {
+  /* Spotify Encore Core Surfaces */
+  --sp-black: #000000;
+  --sp-base: #121212;
+  --sp-elevated: #181818;
+  --sp-tinted: #1f1f1f;
+  --sp-highlight: #282828;
+  --sp-press: #333333;
+  --sp-border: rgba(255, 255, 255, 0.08);
+  --sp-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Brand & Playback Accents */
+  --sp-green: #1ed760;
+  --sp-green-hover: #1fdf64;
+  --sp-green-press: #169c46;
+  --sp-green-tint: rgba(30, 215, 96, 0.14);
+
+  /* Typography Colors (Contrast >= 4.5:1) */
+  --sp-text-primary: #ffffff;
+  --sp-text-subdued: #b3b3b3;
+  --sp-text-muted: #8e8e8e;
+
+  /* Dynamic Cover Art Ambient Color */
+  --kv-ambient-rgb: 30, 215, 96;
+  --kv-ambient-color: rgba(30, 215, 96, 0.32);
+
+  /* Layout Dimensions (Spotify Zen 3-Pane Proportions) */
+  --sp-topbar-h: 58px;
+  --sp-player-h: 86px;
+  --sp-left-w: 224px;
+  --sp-right-w: 316px;
+  --sp-gap: 8px;
+  --sp-radius: 8px;
+
+  /* Standard Scrollbar Tokens */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.24);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
+  --scrollbar-track: transparent;
+
+  /* Font Stacks */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ==========================================================================
+   1. Browser Surfaces, Selection, Focus & Scrollbar Standards
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+::selection {
+  background-color: rgba(30, 215, 96, 0.32);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: var(--sp-black) !important;
+  background-image: none !important;
+  color: var(--sp-text-primary) !important;
+  font-family: var(--font-sans) !important;
+  color-scheme: dark !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  caret-color: var(--sp-green);
+}
+
+@media (min-width: 1024px) {
+  html, body {
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Standard Scrollbars */
+.kv-sp-scrollable,
+#kv-sp-main-view,
+#kv-sp-left-list,
+#kv-sp-right-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+@supports not (scrollbar-color: auto) {
+  .kv-sp-scrollable::-webkit-scrollbar,
+  #kv-sp-main-view::-webkit-scrollbar,
+  #kv-sp-left-list::-webkit-scrollbar,
+  #kv-sp-right-body::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .kv-sp-scrollable::-webkit-scrollbar-track,
+  #kv-sp-main-view::-webkit-scrollbar-track,
+  #kv-sp-left-list::-webkit-scrollbar-track,
+  #kv-sp-right-body::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  .kv-sp-scrollable::-webkit-scrollbar-thumb,
+  #kv-sp-main-view::-webkit-scrollbar-thumb,
+  #kv-sp-left-list::-webkit-scrollbar-thumb,
+  #kv-sp-right-body::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+}
+
+/* Tabular Numerals for Timers, Durations, Counts */
+.kv-time-display,
+.kv-tabular,
+#studio-meter-count,
+#kv-sp-studio-count,
+#kv-sp-liked-count,
+#kv-sp-left-studio-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   2. Spotify Zen Desktop App Shell (#kv-sp-shell)
+   ========================================================================== */
+#kv-sp-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100dvh;
+  background-color: var(--sp-black);
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  #kv-sp-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    padding-bottom: calc(var(--sp-player-h) + 12px);
+  }
+}
+
+/* ==========================================================================
+   3. Top Global Navigation Bar (#kv-sp-topbar)
+   ========================================================================== */
+#kv-sp-topbar {
+  height: var(--sp-topbar-h);
+  min-height: var(--sp-topbar-h);
+  background-color: var(--sp-black);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 16px;
+  z-index: 60;
+  user-select: none;
+}
+
+.kv-sp-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+}
+
+.kv-sp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--sp-text-primary);
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.kv-sp-brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kv-sp-brand-name {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--sp-text-primary);
+}
+
+.kv-zen-badge {
+  display: none !important;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--sp-text-muted);
+  border: 1px solid var(--sp-border);
+  white-space: nowrap;
+}
+
+.kv-sp-circle-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--sp-tinted);
+  color: var(--sp-text-subdued);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-sp-circle-btn:hover {
+  background-color: var(--sp-highlight);
+  color: var(--sp-text-primary);
+}
+
+/* Spotify History Back (<) & Forward (>) + Contextual Go Back Pill */
+.kv-sp-history-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+}
+
+.kv-sp-history-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #1f1f1f;
+  color: var(--sp-text-primary);
+  border: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.kv-sp-history-btn:hover:not(:disabled) {
+  background-color: #2e2e2e;
+  transform: scale(1.05);
+}
+
+.kv-sp-history-btn:disabled,
+.kv-sp-history-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.kv-sp-back-pill {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  background-color: #1f1f1f;
+  color: var(--sp-text-primary);
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.kv-sp-back-pill:hover:not(:disabled) {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  transform: scale(1.02);
+}
+
+.kv-sp-back-pill:disabled,
+.kv-sp-back-pill.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kv-zen-back-btn {
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 9999px;
+  background-color: #242424 !important;
+  color: var(--sp-text-primary) !important;
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.kv-zen-back-btn:hover {
+  background-color: var(--sp-green) !important;
+  color: var(--sp-black) !important;
+  transform: translateX(-1px);
+}
+
+/* Center Home + Search Omnibox */
+.kv-sp-topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 520px;
+}
+
+.kv-sp-home-fab {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--sp-tinted);
+  color: var(--sp-text-primary);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-sp-home-fab:hover {
+  background-color: var(--sp-highlight);
+}
+
+.kv-sp-home-fab.active {
+  color: var(--sp-green);
+}
+
+.kv-sp-search-omnibox {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background-color: var(--sp-tinted);
+  border-radius: 9999px;
+  padding: 0 14px;
+  gap: 10px;
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-sp-search-omnibox:hover {
+  background-color: #252525;
+}
+
+.kv-sp-search-omnibox:focus-within {
+  background-color: #242424;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.kv-sp-search-icon {
+  color: var(--sp-text-subdued);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+#kv-sp-search-input {
+  width: 100%;
+  background: transparent !important;
+  border: none !important;
+  color: var(--sp-text-primary) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  outline: none !important;
+  padding: 0 !important;
+}
+
+#kv-sp-search-input::placeholder {
+  color: var(--sp-text-subdued);
+}
+
+.kv-sp-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--sp-text-subdued);
+  cursor: pointer;
+  padding: 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Right Actions: Prompt Studio Pill + Consolidated Studio Tools Menu */
+.kv-sp-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kv-sp-pill-btn {
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 9999px;
+  background-color: var(--sp-tinted);
+  color: var(--sp-text-primary);
+  border: 1px solid var(--sp-border);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.kv-sp-pill-btn:hover {
+  background-color: var(--sp-highlight);
+}
+
+.kv-sp-pill-btn.primary {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  border-color: transparent;
+}
+
+.kv-sp-pill-btn.primary:hover {
+  background-color: var(--sp-green-hover);
+  transform: scale(1.02);
+}
+
+.kv-sp-studio-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.22);
+  color: var(--sp-black);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Consolidated Studio Tools Dropdown */
+.kv-sp-tools-dropdown {
+  position: relative;
+}
+
+.kv-sp-tools-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 210px;
+  background-color: var(--sp-elevated);
+  border: 1px solid var(--sp-border-strong);
+  border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.72);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 200;
+}
+
+.kv-sp-tools-dropdown.open .kv-sp-tools-popover {
+  display: flex;
+}
+
+.kv-sp-tools-item {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--sp-text-primary);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.kv-sp-tools-item:hover {
+  background-color: var(--sp-highlight);
+}
+
+.kv-sp-tools-item-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kv-sp-tools-item-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background-color: var(--sp-tinted);
+  color: var(--sp-green);
+  border: 1px solid rgba(30, 215, 96, 0.3);
+}
+
+/* ==========================================================================
+   4. Workspace Grid (#kv-sp-workspace) — 3-Pane Zen Layout
+   ========================================================================== */
+#kv-sp-workspace {
+  display: grid;
+  grid-template-columns: var(--sp-left-w) minmax(0, 1fr) var(--sp-right-w);
+  gap: var(--sp-gap);
+  padding: 0 var(--sp-gap);
+  height: calc(100dvh - var(--sp-topbar-h) - var(--sp-player-h));
+  width: 100%;
+  overflow: hidden;
+  transition: grid-template-columns 0.2s ease;
+}
+
+#kv-sp-workspace.left-collapsed {
+  --sp-left-w: 64px;
+}
+
+#kv-sp-workspace.right-closed {
+  grid-template-columns: var(--sp-left-w) minmax(0, 1fr) 0px;
+}
+
+#kv-sp-workspace.right-closed #kv-sp-right-sidebar {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  #kv-sp-workspace {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+  #kv-sp-workspace.right-closed #kv-sp-right-sidebar {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   5. 4-Item Left Navigation Rail (#kv-sp-left-sidebar)
+   ========================================================================== */
+#kv-sp-left-sidebar {
+  background-color: var(--sp-base);
+  border-radius: var(--sp-radius);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+
+.kv-sp-lib-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  color: var(--sp-text-subdued);
+}
+
+.kv-sp-lib-title-btn {
+  background: transparent;
+  border: none;
+  color: var(--sp-text-subdued);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.kv-sp-lib-title-btn:hover {
+  color: var(--sp-text-primary);
+}
+
+#kv-sp-left-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kv-sp-lib-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sp-text-muted);
+  padding: 4px 10px 4px;
+}
+
+.kv-sp-lib-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--sp-text-subdued);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-sp-lib-item:hover {
+  background-color: #1c1c1c;
+  color: var(--sp-text-primary);
+}
+
+.kv-sp-lib-item.active {
+  background-color: var(--sp-highlight);
+  border-color: rgba(30, 215, 96, 0.25);
+  color: var(--sp-text-primary);
+}
+
+.kv-sp-lib-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--sp-tinted);
+  color: var(--sp-text-primary);
+}
+
+.kv-sp-lib-icon.liked-gradient {
+  background: linear-gradient(135deg, #450af5 0%, #8e8ee5 60%, #c4efd9 100%);
+  color: #ffffff;
+}
+
+.kv-sp-lib-icon.green-tint {
+  background-color: rgba(30, 215, 96, 0.14);
+  color: var(--sp-green);
+}
+
+.kv-sp-lib-icon.amber-tint {
+  background-color: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.kv-sp-lib-icon.cyan-tint {
+  background-color: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+}
+
+.kv-sp-lib-icon.purple-tint {
+  background-color: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+}
+
+.kv-sp-lib-icon.rose-tint {
+  background-color: rgba(244, 63, 94, 0.16);
+  color: #fb7185;
+}
+
+.kv-sp-lib-text-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.kv-sp-lib-name {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-sp-lib-sub {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sp-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-sp-lib-item.active .kv-sp-lib-name {
+  color: var(--sp-green);
+}
+
+.kv-sp-lib-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background-color: var(--sp-tinted);
+  color: var(--sp-text-subdued);
+}
+
+.kv-sp-lib-badge.hot-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background-color: rgba(244, 63, 94, 0.18);
+  color: #fb7185;
+}
+
+.kv-sp-creators-header-link:hover span {
+  color: var(--sp-text-primary);
+}
+
+/* Top Creators Rail inside Left Sidebar */
+.kv-sp-creators-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 6px;
+}
+
+.kv-sp-creator-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--sp-text-subdued);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-sp-creator-item:hover {
+  background-color: #1c1c1c;
+  color: var(--sp-text-primary);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.kv-sp-creator-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.kv-sp-creator-name {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--sp-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-sp-creator-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.kv-sp-quick-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kv-sp-mini-tag {
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--sp-text-subdued);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-sp-mini-tag:hover {
+  background-color: var(--sp-green-tint);
+  color: var(--sp-green);
+  border-color: rgba(30, 215, 96, 0.35);
+}
+
+/* Active Studio Prompt Sub-Panel at bottom of Left Sidebar */
+#kv-sp-left-studio-summary {
+  margin: 6px 8px 8px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  background-color: var(--sp-tinted);
+  border: 1px solid var(--sp-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.kv-sp-studio-sum-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.kv-sp-studio-summary-title,
+.kv-sp-studio-sum-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sp-text-subdued);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap !important;
+}
+
+#kv-sp-left-studio-count,
+.kv-sp-studio-summary-badge,
+.kv-sp-studio-sum-count {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px !important;
+  border-radius: 9999px !important;
+  height: auto !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  background-color: var(--sp-green-tint);
+  color: var(--sp-green);
+  border: 1px solid rgba(30, 215, 96, 0.3);
+}
+
+.kv-sp-studio-sum-preview {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--sp-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.kv-sp-studio-sum-preview.empty {
+  font-family: var(--font-sans);
+  color: var(--sp-text-muted);
+  font-style: italic;
+}
+
+.kv-sp-studio-sum-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+  align-items: center;
+}
+
+.kv-sp-studio-sum-btn {
+  width: 100%;
+  height: 27px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background-color: var(--sp-highlight);
+  color: var(--sp-text-primary);
+  border: 1px solid var(--sp-border);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-sp-studio-sum-btn:hover {
+  background-color: var(--sp-press);
+}
+
+.kv-sp-studio-sum-btn.primary {
+  background-color: rgba(30, 215, 96, 0.16);
+  color: var(--sp-green);
+  border-color: rgba(30, 215, 96, 0.35);
+}
+
+.kv-sp-studio-sum-btn.primary:hover {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+}
+
+/* Collapsed Left Sidebar State */
+#kv-sp-workspace.left-collapsed .kv-sp-lib-title-text,
+#kv-sp-workspace.left-collapsed .kv-sp-lib-actions,
+#kv-sp-workspace.left-collapsed .kv-sp-lib-section-label,
+#kv-sp-workspace.left-collapsed .kv-sp-lib-text-col,
+#kv-sp-workspace.left-collapsed .kv-sp-lib-badge,
+#kv-sp-workspace.left-collapsed #kv-sp-left-creators,
+#kv-sp-workspace.left-collapsed #kv-sp-left-studio-summary {
+  display: none !important;
+}
+
+#kv-sp-workspace.left-collapsed .kv-sp-lib-header {
+  justify-content: center;
+  padding: 12px 6px;
+}
+
+#kv-sp-workspace.left-collapsed .kv-sp-lib-item {
+  justify-content: center;
+  padding: 6px;
+}
+
+/* ==========================================================================
+   6. Center Pane: Mode-Based Main Canvas (#kv-sp-main-view)
+   ========================================================================== */
+#kv-sp-main-view {
+  background-color: var(--sp-base);
+  border-radius: var(--sp-radius);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Ambient Header Gradient Wash inside Main View */
+#kv-sp-ambient-wash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 280px;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--kv-ambient-rgb), 0.3) 0%,
+    rgba(var(--kv-ambient-rgb), 0.08) 58%,
+    rgba(18, 18, 18, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.8s ease;
+}
+
+/* Sticky Sub-Bars inside Main Canvas (Discover Sub-Bar & Sound Wiki Category Bar) */
+.kv-zen-subbar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background-color: rgba(18, 18, 18, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 12px;
+}
+
+body[data-zen-view="songs"] #kv-zen-discover-bar,
+body[data-zen-view="creators"] #kv-zen-discover-bar,
+body[data-zen-view="discover"] #kv-zen-discover-bar {
+  display: flex;
+}
+
+body[data-zen-view="wiki"] #kv-zen-wiki-bar {
+  display: flex;
+}
+
+.kv-zen-subbar-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kv-zen-subbar-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.kv-zen-sub-pill {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  background-color: var(--sp-tinted);
+  color: var(--sp-text-subdued);
+  border: 1px solid var(--sp-border);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-zen-sub-pill:hover {
+  background-color: var(--sp-highlight);
+  color: var(--sp-text-primary);
+}
+
+.kv-zen-sub-pill.active {
+  background-color: var(--sp-text-primary);
+  color: var(--sp-black);
+  border-color: var(--sp-text-primary);
+}
+
+/* Sleek Dark Secondary Pill for Play Stream in Discover Sub-Bar (never competes with topbar Studio CTA) */
+#kv-zen-discover-play-all,
+#kv-zen-discover-bar .kv-btn-play-all {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  background: var(--sp-tinted) !important;
+  color: var(--sp-text-primary) !important;
+  border: 1px solid var(--sp-border-strong) !important;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+#kv-zen-discover-play-all:hover,
+#kv-zen-discover-bar .kv-btn-play-all:hover {
+  background: var(--sp-highlight) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   6A. Clutter Elimination & Mode-Based View Rules (data-zen-view)
+   ========================================================================== */
+
+/* Visually collapse React's legacy header while keeping its buttons live for DOM bridge */
+#root > div > header {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ALWAYS HIDDEN EVERYWHERE: Eliminate 6-Block Clutter, Duplicate Players & Floating Bar */
+#block-overview,
+#suno-preview-player,
+#block-ecosystem,
+#root footer,
+#kv-lyrics-drawer,
+#root > div > div.fixed.bottom-3.right-3 {
+  display: none !important;
+}
+
+/* DISCOVER MODE: Show ONLY #block-suno-api (or SunoExplorer) */
+body[data-zen-view="discover"] #block-prompt-studio,
+body[data-zen-view="discover"] #block-sfx-lab,
+body[data-zen-view="discover"] #block-guides,
+body[data-zen-view="discover"] #root > div > div.fixed.bottom-0 {
+  display: none !important;
+}
+
+/* WIKI & LIKED MODES: Never show the floating bottom nj composer drawer */
+body[data-zen-view="wiki"] #root > div > div.fixed.bottom-0,
+body[data-zen-view="liked"] #root > div > div.fixed.bottom-0 {
+  display: none !important;
+}
+
+/* STUDIO MODE: Show ONLY Inline Prompt & Lyrics Composer + 6-Pillar Matrix (#block-prompt-studio) */
+body[data-zen-view="studio"] #block-suno-api,
+body[data-zen-view="studio"] #block-sfx-lab,
+body[data-zen-view="studio"] #block-guides {
+  display: none !important;
+}
+
+body[data-zen-view="studio"] #root > div {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 {
+  display: block !important;
+  position: static !important;
+  pointer-events: auto !important;
+  order: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 20px 24px 0 !important;
+  margin: 0 0 12px 0 !important;
+  z-index: 2 !important;
+}
+
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 > div {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 textarea {
+  min-height: 112px !important;
+}
+
+body[data-zen-view="studio"] #root > div > main {
+  order: 2 !important;
+  padding-top: 8px !important;
+}
+
+/* Hide useless collapse/close buttons & terminal chrome on inline nj composer header */
+body[data-zen-view="studio"] button[aria-label="Collapse"],
+body[data-zen-view="studio"] button[aria-label="Expand"],
+body[data-zen-view="studio"] button[aria-label="Hide Floating Bar"],
+body[data-zen-view="studio"] button[title*="Ẩn thanh"],
+body[data-zen-view="studio"] button[title*="Hide Floating"],
+#root > div > div.fixed.bottom-0 button[aria-label="Collapse"],
+#root > div > div.fixed.bottom-0 button[aria-label="Expand"],
+#root > div > div.fixed.bottom-0 button[aria-label="Hide Floating Bar"],
+#root > div > div.fixed.bottom-0 button[title*="Ẩn thanh"],
+#root > div > div.fixed.bottom-0 button[aria-label*="Collapse"],
+#root > div > div.fixed.bottom-0 button[aria-label*="Expand"],
+#root > div > div.fixed.bottom-0 button[aria-label*="Thu gọn"],
+#root > div > div.fixed.bottom-0 button[aria-label*="Mở rộng"] {
+  display: none !important;
+}
+
+/* Restyle Prompt Studio composer and #block-prompt-studio to authentic Spotify Encore dark surfaces */
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 > div > div,
+body[data-zen-view="studio"] #block-prompt-studio {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 .bg-\[\#010409\],
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 .bg-\[\#0d1117\],
+body[data-zen-view="studio"] #block-prompt-studio .bg-\[\#0d1117\],
+body[data-zen-view="studio"] #block-prompt-studio .bg-\[\#161b22\] {
+  background-color: #181818 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 textarea,
+#root > div > div.fixed.bottom-0 textarea {
+  background-color: #121212 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  color: var(--sp-text-primary) !important;
+}
+
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 textarea:focus,
+#root > div > div.fixed.bottom-0 textarea:focus {
+  border-color: rgba(30, 215, 96, 0.5) !important;
+}
+
+body[data-zen-view="studio"] #block-prompt-studio .border-\[\#30363d\],
+body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 .border-\[\#30363d\] {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Hide redundant "Jump to Studio" button inside #block-prompt-studio header */
+#block-prompt-studio > div:first-child > div:last-child button {
+  display: none !important;
+}
+
+/* LIKED SONGS MODE */
+body[data-zen-view="liked"] #root {
+  display: none !important;
+}
+
+/* Override React's Root Container to sit transparently inside Main View */
+#root,
+#root > div.min-h-screen {
+  background: transparent !important;
+  min-height: auto !important;
+  font-family: var(--font-sans) !important;
+  color: var(--sp-text-primary) !important;
+  position: relative;
+  z-index: 1;
+}
+
+#root main {
+  max-width: 100% !important;
+  padding: 16px 24px 48px !important;
+}
+
+/* Restyle React Sections & Cards into Authentic Spotify Encore Surfaces */
+.bg-\[\#0d1117\],
+.bg-\[\#090d13\],
+.bg-\[\#010409\] {
+  background-color: var(--sp-elevated) !important;
+  border-color: var(--sp-border) !important;
+}
+
+.bg-\[\#161b22\] {
+  background-color: rgba(24, 24, 24, 0.78) !important;
+  border: 1px solid var(--sp-border) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+.bg-\[\#161b22\]:hover {
+  border-color: var(--sp-border-strong) !important;
+}
+
+/* ==========================================================================
+   6B. Clean 3-Signal Track Cards in #block-suno-api & SunoExplorer
+   ========================================================================== */
+
+/* Strip #block-suno-api outer box border/background & hide its internal header row */
+#block-suno-api {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+#block-suno-api > div:first-child {
+  display: none !important;
+}
+
+#block-suno-api .grid > div,
+.min-h-\[580px\] .grid > div,
+.min-h-\[720px\] .grid > div {
+  background-color: var(--sp-elevated) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 10px !important;
+  padding: 14px !important;
+  position: relative !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+#block-suno-api .grid > div:hover,
+.min-h-\[580px\] .grid > div:hover,
+.min-h-\[720px\] .grid > div:hover {
+  background-color: var(--sp-highlight) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Enlarge cover thumbnails inside #block-suno-api cards and remove nested borders */
+#block-suno-api .grid > div .w-14.h-14 {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
+
+/* Simplify #block-suno-api cards to 3 clean signals: Cover+Title/@handle + 1 Genre Pill + Hover Play FAB */
+#block-suno-api .grid > div .space-y-1,
+#block-suno-api .grid > div .mt-3\.5.pt-2\.5.border-t {
+  display: none !important;
+}
+
+/* Disable React's duplicate inline player trigger on thumbnail overlay inside #block-suno-api */
+#block-suno-api .grid > div .w-14.h-14 button {
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* Clean Genre Pill row injected into #block-suno-api cards */
+.kv-zen-card-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kv-zen-genre-pill {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sp-text-subdued);
+  background-color: rgba(255, 255, 255, 0.06);
+  padding: 3px 9px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
+}
+
+.kv-zen-card-lyrics-btn {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-zen-card-lyrics-btn:hover {
+  background: #38bdf8;
+  color: #000000;
+}
+
+.kv-zen-card-add-tag {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sp-green);
+  background: transparent;
+  border: 1px solid rgba(30, 215, 96, 0.3);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-zen-card-add-tag:hover {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+}
+
+/* Inline 2-line Lyrics Preview inside every Track Card */
+.kv-card-lyrics-snippet {
+  margin-top: 9px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background-color: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #d4d4d8;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+/* Center Live Lyrics & DNA Stage Banner at Top of Quick 6-Track Highlights (#block-suno-api) */
+.kv-center-lyrics-stage {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(30, 215, 96, 0.09) 0%, rgba(24, 24, 24, 0.95) 48%, rgba(18, 18, 18, 0.98) 100%);
+  border: 1px solid rgba(30, 215, 96, 0.24);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 1100px) {
+  .kv-center-lyrics-stage {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kv-stage-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.kv-stage-track-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.kv-stage-cover {
+  width: 78px;
+  height: 78px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kv-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-green);
+  margin-bottom: 3px;
+}
+
+.kv-stage-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--sp-text-primary);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-stage-handle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sp-text-subdued);
+}
+
+.kv-stage-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kv-stage-tag-chip {
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.07);
+  color: var(--sp-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-stage-tag-chip:hover {
+  background-color: var(--sp-green-tint);
+  color: var(--sp-green);
+  border-color: rgba(30, 215, 96, 0.4);
+}
+
+.kv-stage-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kv-stage-right {
+  background-color: rgba(12, 12, 12, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kv-stage-lyrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kv-stage-lyrics-body {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #f4f4f5;
+  max-height: 155px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Multi-Creator Showcase Hub at bottom of #block-suno-api */
+.kv-showcase-creator-hub {
+  margin-top: 24px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background-color: var(--sp-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.kv-hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.kv-hub-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--sp-text-primary);
+  margin: 0 0 2px;
+}
+
+.kv-hub-sub {
+  font-size: 12px;
+  color: var(--sp-text-subdued);
+  margin: 0;
+}
+
+.kv-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 10px;
+}
+
+.kv-hub-creator-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.kv-hub-creator-card:hover {
+  background-color: var(--sp-highlight);
+  border-color: rgba(30, 215, 96, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   6C. Sound Wiki Filter Strip (Vibe Matrix) & Borderless Wiki Card Polish
+   ========================================================================== */
+#kv-sp-main-view > #root > div > div.border-b {
+  background-color: rgba(18, 18, 18, 0.92) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding: 10px 24px !important;
+  font-family: var(--font-sans) !important;
+}
+
+#kv-sp-main-view > #root > div > div.border-b .bg-\[\#161b22\] {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  gap: 6px !important;
+}
+
+#kv-sp-main-view > #root > div > div.border-b button {
+  background-color: #1f1f1f !important;
+  color: var(--sp-text-subdued) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+}
+
+#kv-sp-main-view > #root > div > div.border-b button:hover {
+  background-color: var(--sp-highlight) !important;
+  color: var(--sp-text-primary) !important;
+}
+
+#kv-sp-main-view > #root > div > div.border-b button.bg-\[\#238636\],
+#kv-sp-main-view > #root > div > div.border-b button.bg-\[\#1f6feb\]\/20,
+#kv-sp-main-view > #root > div > div.border-b button.font-bold {
+  background-color: #1ed760 !important;
+  color: #000000 !important;
+  border-color: #1ed760 !important;
+  font-weight: 700 !important;
+}
+
+/* Eliminate nested box-inside-box borders inside Sound Wiki cards */
+#root main .grid > div.bg-\[\#161b22\] {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 10px !important;
+}
+
+#root main .grid > div.bg-\[\#161b22\] .bg-\[\#0d1117\] {
+  background-color: #121212 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+}
+
+#root main .grid > div.bg-\[\#161b22\] button.bg-\[\#21262d\] {
+  background-color: #1f1f1f !important;
+  border: none !important;
+  border-radius: 9999px !important;
+}
+
+/* Active Playing Card Highlight */
+[data-kv-track-id].kv-sp-active-card {
+  background-color: #242424 !important;
+  border-color: rgba(30, 215, 96, 0.48) !important;
+}
+
+[data-kv-track-id].kv-sp-active-card h4 {
+  color: var(--sp-green) !important;
+}
+
+/* Signature Spotify Green Floating Play Button (FAB) on Cards */
+.kv-sp-card-play-fab {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: var(--sp-green) !important;
+  color: var(--sp-black) !important;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.15s ease !important;
+  z-index: 15;
+  cursor: pointer;
+}
+
+#block-suno-api .grid > div:hover .kv-sp-card-play-fab,
+.min-h-\[580px\] .grid > div:hover .kv-sp-card-play-fab,
+.min-h-\[720px\] .grid > div:hover .kv-sp-card-play-fab,
+[data-kv-track-id].kv-sp-active-card .kv-sp-card-play-fab {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kv-sp-card-play-fab:hover {
+  background-color: var(--sp-green-hover) !important;
+  transform: scale(1.06) !important;
+}
+
+/* Typography Cleanups inside React Content */
+#root h1, #root h2, #root h3, #root h4 {
+  font-family: var(--font-sans) !important;
+  letter-spacing: -0.02em !important;
+}
+
+#root .bg-clip-text {
+  background: none !important;
+  -webkit-text-fill-color: var(--sp-text-primary) !important;
+  color: var(--sp-text-primary) !important;
+}
+
+#root p, #root span, #root button, #root label {
+  font-family: var(--font-sans);
+}
+
+#root code, #root textarea {
+  font-family: var(--font-mono) !important;
+}
+
+/* ==========================================================================
+   7. Right Pane: Unified "Now Playing DNA & Lyrics" Inspector (#kv-sp-right-sidebar)
+   ========================================================================== */
+#kv-sp-right-sidebar {
+  background-color: var(--sp-base);
+  border-radius: var(--sp-radius);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.kv-sp-np-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kv-sp-np-source {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sp-text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-sp-np-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--sp-green);
+}
+
+#kv-sp-right-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Compact Horizontal Track Header Card (56x56 cover + Title/@handle + Like/Download) */
+.kv-sp-np-compact-track {
+  background-color: var(--sp-tinted);
+  border: 1px solid var(--sp-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kv-sp-np-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.kv-sp-np-cover-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--sp-elevated);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.kv-sp-np-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.kv-sp-np-meta {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kv-sp-np-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--sp-text-primary);
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-sp-np-artist {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sp-text-subdued);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-sp-np-artist:hover {
+  color: var(--sp-text-primary);
+  text-decoration: underline;
+}
+
+.kv-sp-np-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Sub-cards inside Right Now Playing Inspector */
+.kv-sp-np-card {
+  background-color: var(--sp-tinted);
+  border: 1px solid var(--sp-border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kv-sp-np-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kv-sp-np-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sp-text-subdued);
+  margin: 0;
+}
+
+.kv-sp-np-mini-btn {
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--sp-text-primary);
+  border: 1px solid var(--sp-border);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-sp-np-mini-btn:hover {
+  background-color: var(--sp-highlight);
+  color: var(--sp-green);
+}
+
+.kv-sp-dna-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kv-sp-dna-pill {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.07);
+  color: var(--sp-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kv-sp-dna-pill:hover {
+  background-color: var(--sp-green-tint);
+  color: var(--sp-green);
+  border-color: rgba(30, 215, 96, 0.45);
+}
+
+.kv-sp-np-use-prompt-btn {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.kv-sp-np-use-prompt-btn:hover {
+  background-color: var(--sp-green-hover);
+  transform: scale(1.015);
+}
+
+.kv-sp-np-lyrics-card {
+  flex: 1;
+  min-height: 280px;
+}
+
+.kv-sp-np-lyrics-box {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #e5e5e5;
+  flex: 1;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ==========================================================================
+   8. Bottom Persistent Transport Bar (#kv-music-player)
+   ========================================================================== */
+#kv-music-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--sp-player-h);
+  background-color: var(--sp-black);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 16px;
+  color: var(--sp-text-primary);
+  font-family: var(--font-sans);
+  user-select: none;
+}
+
+/* Left Wing: Track Artwork & Info (30%) */
+.kv-player-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 30%;
+  min-width: 180px;
+}
+
+.kv-player-cover-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--sp-elevated);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.kv-player-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kv-player-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.kv-player-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sp-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-player-artist {
+  font-size: 12px;
+  color: var(--sp-text-subdued);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-player-artist a {
+  color: var(--sp-text-subdued);
+  text-decoration: none;
+}
+
+.kv-player-artist a:hover {
+  color: var(--sp-text-primary);
+  text-decoration: underline;
+}
+
+.kv-player-like-btn {
+  background: transparent;
+  border: none;
+  color: var(--sp-text-subdued);
+  cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.kv-player-like-btn:hover {
+  color: var(--sp-text-primary);
+  transform: scale(1.08);
+}
+
+.kv-player-like-btn.liked {
+  color: var(--sp-green);
+}
+
+/* Center Wing: Transport Controls & Scrubber (40%) */
+.kv-player-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 40%;
+  max-width: 680px;
+}
+
+.kv-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.kv-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: var(--sp-text-subdued);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.kv-ctrl-btn:hover {
+  color: var(--sp-text-primary);
+  transform: scale(1.06);
+}
+
+.kv-ctrl-btn.active {
+  color: var(--sp-green);
+}
+
+.kv-ctrl-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--sp-green);
+}
+
+/* Spotify 34px White Circular Play/Pause Button */
+.kv-play-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: var(--sp-text-primary);
+  color: var(--sp-black);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.kv-play-btn:hover {
+  transform: scale(1.06);
+  background-color: #f2f2f2;
+}
+
+.kv-play-btn:active {
+  transform: scale(0.96);
+}
+
+/* Timeline Scrubber Bar */
+.kv-player-timeline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.kv-time-display {
+  font-size: 11px;
+  color: var(--sp-text-subdued);
+  min-width: 34px;
+  text-align: center;
+}
+
+.kv-scrubber-wrap {
+  flex: 1;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.kv-scrubber-track {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.24);
+  border-radius: 2px;
+  position: relative;
+}
+
+.kv-scrubber-fill {
+  height: 100%;
+  background-color: var(--sp-text-primary);
+  border-radius: 2px;
+  width: 0%;
+  transition: background-color 0.15s ease;
+}
+
+.kv-scrubber-wrap:hover .kv-scrubber-fill {
+  background-color: var(--sp-green);
+}
+
+.kv-scrubber-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--sp-text-primary);
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%) scale(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease;
+}
+
+.kv-scrubber-wrap:hover .kv-scrubber-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Right Wing: Now Playing Toggle, Lyrics, Volume (30%) */
+.kv-player-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 30%;
+  min-width: 180px;
+}
+
+.kv-vol-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 115px;
+}
+
+.kv-vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.24);
+  outline: none;
+  cursor: pointer;
+}
+
+.kv-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sp-text-primary);
+  cursor: pointer;
+}
+
+.kv-vol-wrap:hover .kv-vol-slider {
+  accent-color: var(--sp-green);
+}
+
+/* Equalizer Bars (Spotify Green) */
+.kv-row-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  width: 14px;
+}
+
+.kv-row-eq span {
+  flex: 1;
+  background-color: var(--sp-green);
+  border-radius: 1px;
+  animation: spEqLevel 0.75s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.kv-row-eq span:nth-child(1) { height: 45%; animation-delay: 0s; }
+.kv-row-eq span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+.kv-row-eq span:nth-child(3) { height: 65%; animation-delay: 0.4s; }
+
+@keyframes spEqLevel {
+  0% { height: 25%; }
+  100% { height: 100%; }
+}
+
+/* ==========================================================================
+   9. Liked Songs Virtual Playlist View & Spotify Table View
+   ========================================================================== */
+#kv-sp-liked-playlist-view {
+  padding: 24px;
+  display: none;
+  flex-direction: column;
+  gap: 24px;
+}
+
+#kv-sp-liked-playlist-view.active,
+body[data-zen-view="liked"] #kv-sp-liked-playlist-view {
+  display: flex;
+}
+
+.kv-sp-playlist-hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.kv-sp-playlist-cover {
+  width: 168px;
+  height: 168px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #450af5 0%, #8e8ee5 55%, #c4efd9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.kv-sp-playlist-info h1 {
+  font-size: clamp(1.75rem, 3.5vw, 3rem);
+  font-weight: 800;
+  margin: 6px 0 10px;
+  letter-spacing: -0.04em;
+  color: var(--sp-text-primary);
+}
+
+.kv-sp-track-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kv-sp-track-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sp-text-subdued);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.kv-sp-track-row {
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.kv-sp-track-row:hover {
+  background-color: var(--sp-highlight);
+}
+
+.kv-sp-track-row td {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--sp-text-subdued);
+}
+
+/* ==========================================================================
+   10. Prompt Studio Metatag Badges & Toast Notifications
+   ========================================================================== */
+#studio-toast-container {
+  position: fixed;
+  bottom: calc(var(--sp-player-h) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10005;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.studio-toast {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  padding: 10px 18px;
+  border-radius: 9999px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-highlight {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 2px 0;
+  border-radius: 4px;
+  background-color: var(--sp-green-tint);
+  color: var(--sp-green);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.kv-btn-play-all {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 9999px;
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.kv-btn-play-all:hover {
+  background-color: var(--sp-green-hover);
+  transform: scale(1.03);
+}
+
+/* ==========================================================================
+   11. Zero-White-Border Enforcement & Compiled Spotify Zen Utility Classes
+   Fixes uncompiled Tailwind border-white/* falling back to currentColor (#fff)
+   and crops baked-in white frames on Suno cover art JPEGs
+   ========================================================================== */
+*, *::before, *::after,
+.border, .border-t, .border-b, .border-l, .border-r {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.border-white\/\[0\.05\],
+.border-white\/\[0\.06\],
+.border-white\/\[0\.07\],
+.border-white\/\[0\.08\],
+.border-white\/10,
+.border-\[\#282828\] {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.border-0 {
+  border-width: 0 !important;
+  border-color: transparent !important;
+}
+
+.border-white\/\[0\.16\],
+.border-white\/20,
+.hover\:border-white\/\[0\.16\]:hover,
+.hover\:border-white\/20:hover {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.bg-\[\#121212\] { background-color: #121212 !important; }
+.bg-\[\#181818\], .bg-\[\#181818\]\/90 { background-color: #181818 !important; }
+.bg-\[\#242424\], .hover\:bg-\[\#242424\]:hover { background-color: #242424 !important; }
+.hover\:bg-\[\#202020\]:hover, .hover\:bg-\[\#222222\]:hover { background-color: #222222 !important; }
+.hover\:bg-\[\#2a2a2a\]:hover, .hover\:bg-\[\#2e2e2e\]:hover { background-color: #2a2a2a !important; }
+
+.bg-white\/\[0\.04\],
+.bg-white\/\[0\.05\],
+.bg-white\/\[0\.06\],
+.bg-white\/\[0\.07\],
+.bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.hover\:bg-white\/\[0\.1\]:hover,
+.hover\:bg-white\/\[0\.12\]:hover,
+.hover\:bg-white\/\[0\.14\]:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.bg-\[\#1ed760\] { background-color: var(--sp-green) !important; }
+.hover\:bg-\[\#1ed760\]:hover,
+.hover\:bg-\[\#1fdf64\]:hover { background-color: var(--sp-green-hover) !important; }
+.bg-\[\#1ed760\]\/15 { background-color: rgba(30, 215, 96, 0.15) !important; }
+.text-\[\#1ed760\], .hover\:text-\[\#1ed760\]:hover { color: var(--sp-green) !important; }
+.text-\[\#b3b3b3\] { color: var(--sp-text-subdued) !important; }
+.text-black, .hover\:text-black:hover { color: #000000 !important; }
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+/* Authentic Borderless Spotify Media Cards & Lyric Snippets */
+#root main .grid > div,
+.kv-card-lyrics-snippet {
+  border: none !important;
+  border-color: transparent !important;
+}
+
+#root main .grid > div .border-t {
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Crop the 4.4% baked-in white frame on Suno-generated cover art JPEGs */
+.aspect-square > img,
+#block-suno-api .grid > div img {
+  transform: scale(1.11);
+  transition: transform 0.3s ease;
+}
+
+.group:hover .aspect-square > img,
+#block-suno-api .grid > div:hover img {
+  transform: scale(1.15);
+}
+
+/* ==========================================================================
+   12. Spotify Zen Custom Views: Creators Leaderboard & Hot Songs Chart (v6.0)
+   Zero White Borders — Borderless #181818 -> #242424 Surfaces & Subtle Dividers
+   ========================================================================== */
+#kv-zen-creators-view,
+#kv-zen-songs-view {
+  padding: 20px 24px 48px;
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+body[data-zen-view="creators"] #kv-zen-creators-view {
+  display: flex !important;
+}
+
+body[data-zen-view="songs"] #kv-zen-songs-view {
+  display: flex !important;
+}
+
+body[data-zen-view="creators"] #root,
+body[data-zen-view="songs"] #root {
+  display: none !important;
+}
+
+body[data-zen-view="creators"] #kv-sp-liked-playlist-view,
+body[data-zen-view="songs"] #kv-sp-liked-playlist-view {
+  display: none !important;
+}
+
+/* Shortcut Pills inside Discover Sub-Bar */
+.kv-zen-shortcut-pill {
+  background-color: rgba(30, 215, 96, 0.1) !important;
+  color: var(--sp-text-primary) !important;
+  border: 1px solid rgba(30, 215, 96, 0.24) !important;
+}
+
+.kv-zen-shortcut-pill:hover {
+  background-color: var(--sp-green) !important;
+  color: var(--sp-black) !important;
+  border-color: var(--sp-green) !important;
+}
+
+/* 12A. Hero Banner (.kv-zen-hero-banner) */
+.kv-zen-hero-banner {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 24px 26px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 215, 96, 0.16) 0%,
+    rgba(24, 24, 24, 0.96) 52%,
+    rgba(18, 18, 18, 0.99) 100%
+  );
+  border: none !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.kv-zen-hero-banner.songs-hero,
+#kv-zen-songs-view .kv-zen-hero-banner {
+  background: linear-gradient(
+    135deg,
+    rgba(244, 63, 94, 0.18) 0%,
+    rgba(30, 215, 96, 0.1) 38%,
+    rgba(24, 24, 24, 0.96) 72%,
+    rgba(18, 18, 18, 0.99) 100%
+  );
+}
+
+@media (max-width: 1120px) {
+  .kv-zen-hero-banner {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+}
+
+.kv-zen-hero-left,
+.kv-zen-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.kv-zen-hero-kicker,
+.kv-zen-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background-color: rgba(30, 215, 96, 0.16);
+  color: var(--sp-green);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+#kv-zen-songs-view .kv-zen-hero-kicker,
+#kv-zen-songs-view .kv-zen-hero-badge {
+  background-color: rgba(244, 63, 94, 0.18);
+  color: #fb7185;
+}
+
+.kv-zen-hero-banner h1,
+.kv-zen-hero-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.55rem, 2.5vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--sp-text-primary);
+  margin: 0;
+}
+
+.kv-zen-hero-banner p,
+.kv-zen-hero-sub,
+.kv-zen-hero-desc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--sp-text-subdued);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.kv-zen-hero-stats,
+.kv-zen-hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.kv-zen-stat-chip,
+.kv-zen-hero-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--sp-text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Top 3 Creators Podium Spotlight Cards inside Hero Banner */
+.kv-zen-hero-right,
+.kv-zen-podium-grid,
+.kv-zen-hero-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (max-width: 680px) {
+  .kv-zen-hero-right,
+  .kv-zen-podium-grid,
+  .kv-zen-hero-podium {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kv-zen-podium-card,
+.kv-podium-card {
+  background-color: rgba(18, 18, 18, 0.78);
+  border: none !important;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.kv-zen-podium-card:hover,
+.kv-podium-card:hover {
+  background-color: #242424;
+  transform: translateY(-2px);
+}
+
+/* 2x2 Cover Mosaic for Top Songs Hero Banner */
+.kv-zen-cover-mosaic,
+.kv-zen-mosaic-grid,
+.kv-songs-hero-mosaic {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.kv-zen-mosaic-card,
+.kv-zen-mosaic-item,
+.kv-mosaic-tile {
+  background-color: rgba(18, 18, 18, 0.8);
+  border: none !important;
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-width: 0;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.kv-zen-mosaic-card:hover,
+.kv-zen-mosaic-item:hover,
+.kv-mosaic-tile:hover {
+  background-color: #242424;
+  transform: translateY(-1px);
+}
+
+.kv-zen-mosaic-cover,
+.kv-mosaic-cover-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: #181818;
+}
+
+.kv-zen-mosaic-cover img,
+.kv-mosaic-cover-wrap img,
+.kv-zen-mosaic-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.11);
+  display: block;
+}
+
+/* 12B. Structured 2-Row Filter & Ranking Control Bar (.kv-zen-control-bar) */
+.kv-zen-control-bar {
+  position: sticky;
+  top: 56px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background-color: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.kv-zen-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.kv-zen-toolbar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kv-zen-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kv-zen-toolbar-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.kv-zen-control-group,
+.kv-zen-control-pills,
+.kv-zen-filter-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Primary Ranking Tabs (Segmented Container) */
+.kv-zen-control-group {
+  background-color: #141414;
+  padding: 3px;
+  border-radius: 9999px;
+  gap: 3px;
+}
+
+.kv-zen-sort-pill {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: var(--sp-text-subdued);
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-zen-sort-pill:hover {
+  color: var(--sp-text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.kv-zen-sort-pill.active {
+  background-color: #1ed760 !important;
+  color: #000000 !important;
+  font-weight: 800;
+}
+
+/* Secondary Genre/Style Filter Chips — Crisp White Active Pill (No Competing Green!) */
+.kv-zen-filter-pill {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  background-color: #222222;
+  color: var(--sp-text-subdued);
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-zen-filter-pill:hover {
+  background-color: #2c2c2c;
+  color: var(--sp-text-primary);
+}
+
+.kv-zen-filter-pill.active {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 800;
+}
+
+/* Segmented View Mode Toggle (Table vs Grid) */
+.kv-zen-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background-color: #141414;
+  padding: 3px;
+  border-radius: 9999px;
+  gap: 2px;
+}
+
+.kv-zen-view-btn {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: var(--sp-text-subdued);
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-zen-view-btn:hover {
+  color: var(--sp-text-primary);
+}
+
+.kv-zen-view-btn.active {
+  background-color: #2e2e2e !important;
+  color: #ffffff !important;
+}
+
+/* Compact Creator Select Dropdown */
+.kv-zen-select {
+  height: 32px;
+  max-width: 155px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  background-color: #222222 !important;
+  color: var(--sp-text-primary) !important;
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  text-overflow: ellipsis;
+}
+
+.kv-zen-select:hover {
+  background-color: #2a2a2a !important;
+}
+
+.kv-zen-control-search,
+.kv-zen-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 210px;
+}
+
+.kv-zen-control-bar input[type="text"],
+.kv-zen-control-bar input[type="search"],
+.kv-zen-search-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 9999px;
+  background-color: #222222 !important;
+  color: var(--sp-text-primary) !important;
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+}
+
+.kv-zen-control-bar input[type="text"]:focus,
+.kv-zen-control-bar input[type="search"]:focus,
+.kv-zen-search-input:focus {
+  background-color: #282828 !important;
+  box-shadow: 0 0 0 1.5px rgba(30, 215, 96, 0.55);
+}
+
+/* 12C. Creator Rank Cards Grid & Card (.kv-creator-rank-card) */
+.kv-creators-rank-grid,
+.kv-creators-grid,
+#kv-zen-creators-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.kv-creator-rank-card {
+  background-color: #181818;
+  border: none !important;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.kv-creator-rank-card:hover {
+  background-color: #242424;
+  transform: translateY(-2px);
+}
+
+.kv-creator-card-top,
+.kv-creator-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Rank Badges: Gold #f59e0b / Silver #cbd5e1 / Bronze #d97706 */
+.kv-creator-rank-badge,
+.kv-rank-badge {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  background-color: #262626;
+  color: var(--sp-text-subdued);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kv-creator-rank-badge.rank-1,
+.kv-creator-rank-badge.gold,
+.kv-rank-badge.rank-1,
+.kv-creator-rank-card[data-rank="1"] .kv-creator-rank-badge {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.kv-creator-rank-badge.rank-2,
+.kv-creator-rank-badge.silver,
+.kv-rank-badge.rank-2,
+.kv-creator-rank-card[data-rank="2"] .kv-creator-rank-badge {
+  background-color: rgba(203, 213, 225, 0.18);
+  color: #cbd5e1;
+}
+
+.kv-creator-rank-badge.rank-3,
+.kv-creator-rank-badge.bronze,
+.kv-rank-badge.rank-3,
+.kv-creator-rank-card[data-rank="3"] .kv-creator-rank-badge {
+  background-color: rgba(217, 119, 6, 0.22);
+  color: #d97706;
+}
+
+/* Circular Creator Avatar */
+.kv-creator-avatar-wrap,
+.kv-creator-rank-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #242424;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.kv-creator-avatar-wrap img,
+.kv-creator-rank-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transform: scale(1.08);
+  display: block;
+}
+
+.kv-creator-identity,
+.kv-creator-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kv-creator-display-name,
+.kv-creator-rank-card h3 {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--sp-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-creator-handle-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sp-text-subdued);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Single-Line Creator & Song Style DNA Pills (Never Wraps Multi-Line!) */
+.kv-creator-style-pills,
+.kv-creator-tags,
+.kv-song-dna-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.kv-creator-style-pill,
+.kv-creator-tag-pill {
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--sp-text-subdued);
+  border: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap !important;
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kv-creator-style-pill:hover,
+.kv-creator-tag-pill:hover {
+  background-color: rgba(30, 215, 96, 0.16);
+  color: var(--sp-green);
+}
+
+/* Embedded Mini-Chart of Top 3 Songs inside Creator Card */
+.kv-creator-mini-chart,
+.kv-creator-top-songs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kv-creator-mini-track,
+.kv-creator-mini-row,
+.kv-creator-song-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background-color: rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.kv-creator-mini-track:hover,
+.kv-creator-mini-row:hover,
+.kv-creator-song-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.kv-creator-mini-cover {
+  width: 32px;
+  height: 32px;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: #121212;
+}
+
+.kv-creator-mini-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.11);
+  display: block;
+}
+
+/* Creator Card Footer Actions */
+.kv-creator-card-footer,
+.kv-creator-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kv-creator-card-footer button,
+.kv-creator-action-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  background-color: #1f1f1f;
+  color: var(--sp-text-primary);
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.kv-creator-card-footer button:hover,
+.kv-creator-action-btn:hover {
+  background-color: #2e2e2e;
+}
+
+.kv-creator-card-footer button.primary,
+.kv-creator-action-btn.primary {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+}
+
+.kv-creator-card-footer button.primary:hover,
+.kv-creator-action-btn.primary:hover {
+  background-color: var(--sp-green-hover);
+  transform: scale(1.02);
+}
+
+/* 12D. Spotify Top 50 Songs Chart Table (.kv-songs-chart-table — Fixed 6-Column Layout, Zero Overflow) */
+.kv-songs-chart-wrap,
+.kv-songs-table-container {
+  background-color: #181818;
+  border-radius: 12px;
+  padding: 6px 12px 14px;
+  border: none !important;
+  overflow: hidden;
+}
+
+.kv-songs-chart-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+}
+
+.kv-songs-chart-table .kv-col-rank { width: 44px; }
+.kv-songs-chart-table .kv-col-track { width: 30%; }
+.kv-songs-chart-table .kv-col-dna { width: 20%; }
+.kv-songs-chart-table .kv-col-lyrics { width: 22%; }
+.kv-songs-chart-table .kv-col-streams { width: 108px; }
+.kv-songs-chart-table .kv-col-action { width: 122px; }
+
+.kv-song-subline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.kv-mobile-song-plays,
+.kv-mobile-song-tag,
+.kv-th-mobile {
+  display: none;
+}
+
+.kv-songs-chart-table thead th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sp-text-muted);
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-songs-chart-table tbody tr,
+.kv-songs-chart-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.kv-songs-chart-table tbody tr:last-child,
+.kv-songs-chart-row:last-child {
+  border-bottom: none;
+}
+
+.kv-songs-chart-table tbody tr:hover,
+.kv-songs-chart-row:hover {
+  background-color: #242424;
+}
+
+.kv-songs-chart-table tbody tr.kv-sp-active-card,
+.kv-songs-chart-row.kv-sp-active-card,
+.kv-songs-chart-row.active {
+  background-color: rgba(30, 215, 96, 0.1);
+}
+
+.kv-songs-chart-table td {
+  padding: 8px 8px;
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--sp-text-subdued);
+  overflow: hidden;
+}
+
+/* Rank Number + Hover Play Button Cell */
+.kv-song-rank-cell,
+.kv-songs-chart-table td:first-child {
+  width: 44px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+
+.kv-song-rank-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.kv-song-rank-num.rank-1 { color: #f59e0b; }
+.kv-song-rank-num.rank-2 { color: #cbd5e1; }
+.kv-song-rank-num.rank-3 { color: #d97706; }
+
+.kv-song-row-play,
+.kv-chart-play-btn {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  opacity: 1 !important;
+  transform: none !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50%;
+  background-color: var(--sp-green) !important;
+  color: var(--sp-black) !important;
+  border: none !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.kv-songs-chart-table tbody tr:hover .kv-song-rank-num,
+.kv-songs-chart-row:hover .kv-song-rank-num,
+.kv-songs-chart-row.kv-sp-active-card .kv-song-rank-num {
+  display: none;
+}
+
+.kv-songs-chart-table tbody tr:hover .kv-song-row-play,
+.kv-songs-chart-table tbody tr:hover .kv-chart-play-btn,
+.kv-songs-chart-row:hover .kv-song-row-play,
+.kv-songs-chart-row:hover .kv-chart-play-btn,
+.kv-songs-chart-row.kv-sp-active-card .kv-song-row-play {
+  display: inline-flex;
+}
+
+.kv-mini-song-play.kv-sp-card-play-fab {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  opacity: 1 !important;
+  transform: none !important;
+  width: 26px !important;
+  height: 26px !important;
+  box-shadow: none !important;
+  background-color: rgba(30, 215, 96, 0.16) !important;
+  color: #1ed760 !important;
+}
+
+.kv-creator-mini-row:hover .kv-mini-song-play.kv-sp-card-play-fab,
+.kv-creator-mini-row.kv-sp-active-card .kv-mini-song-play.kv-sp-card-play-fab {
+  background-color: #1ed760 !important;
+  color: #000000 !important;
+}
+
+.kv-song-grid-art .kv-grid-play-fab {
+  top: auto !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  width: 38px !important;
+  height: 38px !important;
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.kv-song-grid-card:hover .kv-grid-play-fab,
+.kv-song-grid-card.kv-sp-active-card .kv-grid-play-fab {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* 44x44 Edge-to-Edge Cover Art with scale(1.11) inside overflow:hidden (Zero White JPEG Borders) */
+.kv-song-cover-wrap,
+.kv-chart-cover-wrap,
+.kv-songs-chart-cover {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #121212;
+  border: none !important;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.kv-song-cover-wrap img,
+.kv-chart-cover-wrap img,
+.kv-songs-chart-cover img,
+.kv-songs-chart-table td img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  transform: scale(1.11);
+  transition: transform 0.25s ease;
+  display: block;
+  border: none !important;
+}
+
+.kv-songs-chart-table tbody tr:hover td img,
+.kv-songs-chart-row:hover img {
+  transform: scale(1.15);
+}
+
+.kv-song-track-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.kv-song-meta-col {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.kv-song-title-text,
+.kv-chart-song-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sp-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-songs-chart-row.kv-sp-active-card .kv-song-title-text,
+.kv-songs-chart-row.active .kv-song-title-text {
+  color: var(--sp-green);
+}
+
+.kv-song-artist-link,
+.kv-chart-song-artist {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sp-text-subdued);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-song-artist-link:hover,
+.kv-chart-song-artist:hover {
+  color: var(--sp-text-primary);
+  text-decoration: underline;
+}
+
+/* Lyrics Preview Cell inside Songs Table */
+.kv-song-lyrics-cell {
+  font-size: 12px;
+  color: #8e8e8e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* Tabular-Nums Play Counts & Metrics */
+.kv-song-plays-cell {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.kv-song-streams-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.kv-song-plays-main {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sp-green);
+  white-space: nowrap;
+}
+
+.kv-song-likes-sub {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8e8e8e;
+  white-space: nowrap;
+}
+
+/* Duration + Studio Action Cell */
+.kv-song-actions-cell,
+.kv-chart-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.kv-song-dur-label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--sp-text-subdued);
+}
+
+.kv-song-studio-pill,
+.kv-chart-studio-btn,
+.kv-songs-chart-table .kv-zen-card-add-tag {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background-color: rgba(30, 215, 96, 0.14);
+  color: var(--sp-green);
+  border: none !important;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.kv-song-studio-pill:hover,
+.kv-chart-studio-btn:hover,
+.kv-songs-chart-table .kv-zen-card-add-tag:hover {
+  background-color: var(--sp-green);
+  color: var(--sp-black);
+  transform: scale(1.03);
+}
+
+/* ==========================================================================
+   16. Mobile, Touch & Small-Viewport Responsive Architecture
+   ========================================================================== */
+
+/* Desktop defaults for mobile-only elements */
+#kv-mobile-bottom-nav,
+#kv-sp-mobile-backdrop {
+  display: none;
+}
+
+/* Always reveal Play FAB on touch/coarse devices for standard cards (excluding inline table/mini-row buttons) */
+@media (hover: none), (pointer: coarse), (max-width: 768px) {
+  .kv-sp-card-play-fab:not(.kv-song-row-play):not(.kv-mini-song-play):not(.kv-grid-play-fab) {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    width: 38px !important;
+    height: 38px !important;
+    top: 12px !important;
+    right: 12px !important;
+    bottom: auto !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.65) !important;
+  }
+
+  .kv-song-grid-art .kv-grid-play-fab {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    top: auto !important;
+    bottom: 8px !important;
+    right: 8px !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .kv-song-row-play-btn {
+    opacity: 0.92;
+  }
+}
+
+/* Tablet & Mobile (< 1024px): Slide-Up Bottom Sheet for Now Playing DNA & Lyrics */
+@media (max-width: 1023px) {
+  #kv-sp-mobile-backdrop.active {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.74);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 10001;
+  }
+
+  #kv-sp-workspace:not(.right-closed) #kv-sp-right-sidebar {
+    display: flex !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    max-height: 82dvh;
+    z-index: 10002;
+    border-radius: 16px 16px 0 0;
+    background-color: var(--sp-elevated);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.88);
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    overflow: hidden;
+  }
+
+  #kv-sp-right-sidebar .kv-sp-np-header {
+    padding: 14px 16px 10px;
+    background-color: var(--sp-elevated);
+  }
+
+  #kv-sp-right-body {
+    max-height: calc(82dvh - 54px);
+    overflow-y: auto;
+    padding: 0 14px 20px;
+  }
+}
+
+/* Mobile Viewports (<= 768px): Spotify-Style Mobile Streamer Shell */
+@media (max-width: 768px) {
+  :root {
+    --sp-topbar-h: 54px;
+    --sp-player-h: 58px;
+  }
+
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  /* 1. Sticky Compact Mobile Topbar (#kv-sp-topbar) */
+  #kv-sp-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 120;
+    height: 54px;
+    padding: 0 10px;
+    gap: 8px;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .kv-sp-topbar-left {
+    min-width: 0;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .kv-sp-brand-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .kv-sp-brand-name {
+    font-size: 15px;
+  }
+
+  /* Hide desktop chevron history buttons on mobile; show Go Back pill only when active */
+  .kv-sp-history-btn,
+  .kv-sp-back-pill.disabled,
+  .kv-sp-home-fab,
+  #kv-sp-open-studio {
+    display: none !important;
+  }
+
+  .kv-sp-back-pill:not(.disabled) {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 11px;
+    max-width: 110px;
+  }
+
+  .kv-sp-topbar-center {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: stretch;
+  }
+
+  .kv-sp-search-omnibox {
+    max-width: none;
+    height: 36px;
+  }
+
+  .kv-sp-search-omnibox input {
+    height: 36px;
+    padding: 0 30px 0 34px;
+    font-size: 12.5px;
+  }
+
+  .kv-sp-search-icon {
+    left: 11px;
+  }
+
+  .kv-sp-topbar-right {
+    min-width: 0;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  #kv-sp-tools-menu-btn {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 11.5px;
+  }
+
+  #kv-sp-tools-menu-btn span {
+    display: none;
+  }
+
+  /* 2. Hide Bulky Desktop Left Sidebar on Mobile (Replaced by Bottom Nav Bar) */
+  #kv-sp-left-sidebar {
+    display: none !important;
+  }
+
+  #kv-sp-workspace {
+    padding: 0;
+    gap: 0;
+  }
+
+  #kv-sp-main-view {
+    border-radius: 0;
+    padding-bottom: calc(138px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Maximize Horizontal Space for Songs & Creators Views on Mobile */
+  #kv-zen-creators-view,
+  #kv-zen-songs-view {
+    padding: 10px 10px 28px !important;
+    gap: 12px !important;
+  }
+
+  /* 3. Sticky Horizontally Scrollable Subbars (#kv-zen-discover-bar & #kv-zen-wiki-bar) */
+  .kv-zen-subbar {
+    padding: 8px 10px;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .kv-zen-subbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kv-zen-subbar-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 6px;
+    flex: 1 1 auto;
+  }
+
+  .kv-zen-subbar-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kv-zen-sub-pill {
+    height: 30px;
+    padding: 0 11px;
+    font-size: 11.5px;
+    flex-shrink: 0;
+  }
+
+  #kv-zen-discover-play-all {
+    height: 30px;
+    padding: 0 11px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* 4. Songs & Creators Hero Banner + Compact 3-Row Non-Sticky Toolbar on Mobile */
+  .kv-zen-hero-banner {
+    padding: 14px 12px !important;
+    gap: 12px !important;
+    border-radius: 12px;
+  }
+
+  .kv-zen-hero-left {
+    gap: 8px;
+  }
+
+  .kv-zen-hero-badge {
+    font-size: 9.5px;
+    padding: 3px 9px;
+  }
+
+  .kv-zen-hero-title,
+  .kv-zen-hero-banner h1 {
+    font-size: 20px !important;
+    line-height: 1.18 !important;
+  }
+
+  .kv-zen-hero-sub,
+  .kv-zen-hero-banner p {
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+
+  .kv-zen-hero-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .kv-zen-hero-actions .kv-sp-pill-btn {
+    flex: 1 1 0;
+    justify-content: center;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  /* Top 4 Songs 2x2 Mosaic inside Songs Hero Banner on Mobile */
+  .kv-songs-hero-mosaic {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .kv-zen-mosaic-card {
+    padding: 7px 8px !important;
+    gap: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  .kv-mosaic-cover-wrap {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+
+  /* Top 3 Creators Podium inside Creators Hero Banner on Mobile (Compact Horizontal Rows) */
+  .kv-zen-podium-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 0 !important;
+    gap: 7px !important;
+  }
+
+  .kv-podium-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .kv-podium-medal {
+    align-self: center !important;
+    flex-shrink: 0;
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+  }
+
+  .kv-podium-top-row {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px !important;
+  }
+
+  .kv-podium-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+  }
+
+  .kv-podium-card > div:nth-child(3) {
+    display: none !important;
+  }
+
+  .kv-podium-play-btn {
+    width: auto !important;
+    margin-top: 0 !important;
+    height: 26px !important;
+    padding: 0 10px !important;
+    font-size: 10.5px !important;
+    flex-shrink: 0;
+  }
+
+  /* Non-Sticky, Compact 3-Row Control Toolbar on Mobile (Never Blocks Viewport Scrolling!) */
+  .kv-zen-control-bar {
+    position: static !important;
+    top: auto !important;
+    padding: 10px !important;
+    gap: 8px !important;
+    border-radius: 10px;
+  }
+
+  .kv-zen-toolbar-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .kv-zen-control-group {
+    display: flex !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    gap: 4px !important;
+    padding: 3px !important;
+  }
+
+  .kv-zen-control-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kv-zen-sort-pill {
+    flex: 1 1 auto;
+    justify-content: center;
+    height: 29px !important;
+    padding: 0 9px !important;
+    font-size: 11px !important;
+    flex-shrink: 0;
+  }
+
+  .kv-zen-toolbar-right {
+    display: flex !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .kv-zen-select {
+    max-width: 112px !important;
+    height: 32px !important;
+    font-size: 11px !important;
+    padding: 0 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .kv-zen-control-search,
+  .kv-zen-search-wrap {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .kv-zen-control-bar input[type="text"],
+  .kv-zen-control-bar input[type="search"],
+  .kv-zen-search-input {
+    height: 32px !important;
+    padding: 0 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  .kv-zen-view-toggle {
+    flex-shrink: 0 !important;
+    padding: 2px !important;
+  }
+
+  .kv-zen-view-btn {
+    height: 26px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+  }
+
+  .kv-zen-toolbar-bottom {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    gap: 8px !important;
+    padding-top: 7px !important;
+  }
+
+  .kv-zen-toolbar-bottom::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kv-zen-filter-group {
+    width: auto !important;
+    flex: 1 1 auto;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    gap: 5px !important;
+  }
+
+  .kv-zen-filter-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kv-zen-filter-pill {
+    height: 26px !important;
+    padding: 0 10px !important;
+    font-size: 11px !important;
+    flex-shrink: 0;
+  }
+
+  /* 5. Mobile Creators Leaderboard Grid (#kv-zen-creators-grid) */
+  #kv-zen-creators-grid,
+  .kv-creators-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 0 !important;
+    gap: 10px !important;
+  }
+
+  .kv-creator-rank-card {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+
+  .kv-creator-avatar-wrap {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .kv-creator-card-footer {
+    gap: 6px !important;
+  }
+
+  .kv-creator-card-footer button,
+  .kv-creator-action-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 6. Mobile Hot Songs Chart Table (3 Spacious Columns: # | Track + Inline Plays & Tag | + Studio) */
+  .kv-songs-chart-wrap,
+  .kv-songs-table-container {
+    padding: 4px 6px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  .kv-songs-chart-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  /* CRITICAL FIX: Hide <colgroup> on mobile so hidden <col> widths never reserve empty space on the right */
+  .kv-songs-chart-table colgroup {
+    display: none !important;
+  }
+
+  .kv-songs-chart-table th:nth-child(3),
+  .kv-songs-chart-table td:nth-child(3),
+  .kv-songs-chart-table th:nth-child(4),
+  .kv-songs-chart-table td:nth-child(4),
+  .kv-songs-chart-table th:nth-child(5),
+  .kv-songs-chart-table td:nth-child(5) {
+    display: none !important;
+  }
+
+  .kv-songs-chart-table th:nth-child(1),
+  .kv-songs-chart-table td:nth-child(1) {
+    width: 34px !important;
+    padding: 8px 2px !important;
+    text-align: center !important;
+  }
+
+  .kv-songs-chart-table th:nth-child(2),
+  .kv-songs-chart-table td:nth-child(2) {
+    width: auto !important;
+    padding: 8px 6px !important;
+  }
+
+  .kv-songs-chart-table th:nth-child(6),
+  .kv-songs-chart-table td:nth-child(6) {
+    width: 74px !important;
+    padding: 8px 4px !important;
+    text-align: right !important;
+  }
+
+  .kv-th-desktop,
+  .kv-song-dur-label {
+    display: none !important;
+  }
+
+  .kv-th-mobile {
+    display: inline !important;
+  }
+
+  .kv-mobile-song-plays {
+    display: inline !important;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sp-green);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  .kv-mobile-song-tag {
+    display: inline !important;
+    font-size: 10.5px;
+    color: #8e8e8e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kv-song-track-cell {
+    gap: 9px !important;
+  }
+
+  .kv-song-cover-wrap,
+  .kv-chart-cover-wrap,
+  .kv-songs-chart-cover {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+  }
+
+  .kv-song-cover-wrap img,
+  .kv-chart-cover-wrap img,
+  .kv-songs-chart-table td img {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .kv-song-title-text,
+  .kv-chart-song-title {
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+
+  .kv-song-row-play.kv-sp-card-play-fab {
+    width: 26px !important;
+    height: 26px !important;
+    position: static !important;
+    box-shadow: none !important;
+  }
+
+  .kv-mini-song-play.kv-sp-card-play-fab {
+    width: 26px !important;
+    height: 26px !important;
+    position: static !important;
+    box-shadow: none !important;
+  }
+
+  .kv-song-studio-pill {
+    height: 26px !important;
+    padding: 0 9px !important;
+    font-size: 10.5px !important;
+  }
+
+  /* 6B. Mobile Songs Cover Grid (2-Column Square Album Grid) */
+  .kv-songs-cover-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .kv-song-grid-card {
+    padding: 9px !important;
+    gap: 6px !important;
+  }
+
+  /* 7. Discover / Featured Showcase, Studio, Wiki & Liked Songs on Mobile */
+  body[data-zen-view="discover"] #root main,
+  body[data-zen-view="wiki"] #root main,
+  body[data-zen-view="studio"] #root main {
+    padding: 10px 10px 24px !important;
+  }
+
+  body[data-zen-view="studio"] #root > div > div.fixed.bottom-0 {
+    margin: 10px 10px 12px !important;
+    padding: 12px !important;
+  }
+
+  #kv-sp-liked-playlist-view {
+    padding: 12px 10px 24px !important;
+    gap: 14px !important;
+  }
+
+  .kv-sp-playlist-hero {
+    gap: 14px !important;
+    padding-bottom: 14px !important;
+    align-items: center !important;
+  }
+
+  .kv-sp-playlist-cover {
+    width: 72px !important;
+    height: 72px !important;
+  }
+
+  .kv-sp-playlist-cover svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .kv-sp-playlist-info h1 {
+    font-size: 22px !important;
+    margin: 2px 0 4px !important;
+  }
+
+  .kv-sp-track-table th:nth-child(3),
+  .kv-sp-track-table td:nth-child(3) {
+    display: none !important;
+  }
+
+  /* Fix Showcase header where title and 'Explore 32 Community Creators' button collided */
+  #block-suno-api > div:first-child,
+  #block-suno-api .flex.items-center.justify-between {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  #block-suno-api button.bg-\[\#1f6feb\]\/20 {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Live Lyrics Stage Banner on Mobile */
+  .kv-center-lyrics-stage {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .kv-stage-cover {
+    width: 56px;
+    height: 56px;
+  }
+
+  .kv-stage-title {
+    font-size: 15px;
+  }
+
+  .kv-stage-lyrics-body {
+    max-height: 150px;
+    font-size: 12px;
+  }
+
+  /* Track Cards Grid: Clean Full-Width Cards with Room for Title, Lyrics & Actions */
+  #block-suno-api .grid,
+  .min-h-\[580px\] .grid,
+  .min-h-\[720px\] .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  #block-suno-api .grid > div,
+  .min-h-\[580px\] .grid > div,
+  .min-h-\[720px\] .grid > div {
+    padding: 12px !important;
+  }
+
+  /* Reserve right margin in card top header so title never collides with Play FAB */
+  #block-suno-api .grid > div h4,
+  .min-h-\[580px\] .grid > div h4,
+  .min-h-\[720px\] .grid > div h4 {
+    padding-right: 40px;
+    font-size: 13.5px !important;
+    line-height: 1.35 !important;
+  }
+
+  .kv-card-lyrics-snippet {
+    margin-top: 6px;
+    padding: 6px 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    min-height: 0;
+  }
+
+  .kv-zen-card-pill-row {
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+
+  .kv-hub-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 8. Floating Spotify Mobile Mini-Player (#kv-music-player) with Prev / Play / Next / Lyrics */
+  #kv-music-player {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    height: 58px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background-color: #181818;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.82);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .kv-player-track {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 1 1 auto;
+    gap: 8px;
+  }
+
+  .kv-player-cover-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .kv-player-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .kv-player-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .kv-player-artist {
+    font-size: 11px;
+  }
+
+  .kv-player-like-btn {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+
+  .kv-player-center {
+    width: auto !important;
+    max-width: none !important;
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .kv-player-controls {
+    gap: 2px;
+  }
+
+  /* Keep Prev, Play/Pause, and Next visible on Mobile Mini-Player; hide Shuffle & Repeat */
+  #kv-btn-shuffle,
+  #kv-btn-repeat {
+    display: none !important;
+  }
+
+  #kv-btn-prev,
+  #kv-btn-next {
+    width: 30px;
+    height: 30px;
+  }
+
+  .kv-play-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Sleek full-width progress line along bottom edge of floating mini-player */
+  .kv-player-timeline {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 0;
+    width: auto;
+    height: 3px;
+    gap: 0;
+    pointer-events: auto;
+  }
+
+  .kv-player-timeline .kv-time-display,
+  .kv-player-timeline .kv-scrubber-thumb {
+    display: none !important;
+  }
+
+  .kv-player-timeline .kv-scrubber-wrap {
+    height: 3px;
+  }
+
+  .kv-player-timeline .kv-scrubber-track {
+    height: 2.5px;
+    border-radius: 2px;
+  }
+
+  .kv-player-right {
+    width: auto !important;
+    min-width: 0 !important;
+    flex-shrink: 0;
+    gap: 2px;
+  }
+
+  /* Keep only the Lyrics/DNA Inspector button in .kv-player-right on mobile */
+  .kv-player-eq,
+  #kv-btn-np-pane,
+  #kv-btn-prompt-send,
+  .kv-vol-wrap,
+  #kv-player-suno-link {
+    display: none !important;
+  }
+
+  #kv-btn-lyrics-toggle {
+    width: 32px;
+    height: 32px;
+    color: var(--sp-green);
+  }
+
+  /* 9. Fixed 5-Tab Mobile Bottom Navigation Bar (#kv-mobile-bottom-nav) */
+  #kv-mobile-bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding: 0 4px env(safe-area-inset-bottom, 0px);
+    background-color: rgba(0, 0, 0, 0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    z-index: 9999;
+  }
+
+  .kv-mobile-nav-item {
+    position: relative;
+    height: 52px;
+    border: none;
+    background: transparent;
+    color: var(--sp-text-subdued);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 2px;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.12s ease;
+  }
+
+  .kv-mobile-nav-item:active {
+    transform: scale(0.95);
+  }
+
+  .kv-mobile-nav-item.active {
+    color: var(--sp-text-primary);
+  }
+
+  .kv-mobile-nav-item.active .kv-mobile-nav-icon {
+    color: var(--sp-green);
+  }
+
+  .kv-mobile-nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+  }
+
+  .kv-mobile-nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .kv-mobile-nav-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .kv-mobile-nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 16%;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    background-color: var(--sp-green);
+    color: var(--sp-black);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 800;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Adjust Toast Notification Position on Mobile so it sits above Mini-Player + Bottom Nav */
+  #studio-toast-container,
+  #kv-toast-container {
+    bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important;
+    max-width: 92vw;
+  }
+}
+
+/* Extra-Small Phones (<= 420px): Hide Brand Text When Search or Back Pill Needs Space */
+@media (max-width: 420px) {
+  .kv-sp-brand-name {
+    display: none;
+  }
+}
+
+
+
