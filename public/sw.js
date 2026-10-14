@@ -1,5 +1,5 @@
-// Service Worker for kv-suno PWA Media Player — v6.4
-const CACHE_NAME = 'kv-suno-pwa-v6.4';
+// Service Worker for kv-suno PWA Media Player — v6.5
+const CACHE_NAME = 'kv-suno-pwa-v6.5';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

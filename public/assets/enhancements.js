@@ -5,7 +5,7 @@
  * - Clean Right Track DNA & Full Lyrics Inspector (strips promo spam headers, highlights [Verse]/[Chorus] metatags)
  */
 
-import { ensureZenCustomTabsMounted, activateZenCreatorsTab, activateZenSongsTab } from './zen-tabs.js?v=6.4';
+import { ensureZenCustomTabsMounted, activateZenCreatorsTab, activateZenSongsTab } from './zen-tabs.js?v=6.5';
 
 // Ensure React's Prompt Studio composer is mounted (never collapsed into floating pill)
 try {
@@ -223,7 +223,8 @@ window.fetch = async function (...args) {
 // 1. Authored Inline SVG Icon Library & Top Creators Catalog
 // ============================================================================
 const SP_ICONS = {
-  brandWave: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 12h2m4-7v14m4-10v6m4-12v18m4-11v4"/></svg>`,
+  brandLogo: `<svg width="34" height="34" viewBox="0 0 512 512" role="img" aria-label="KV Suno"><defs><linearGradient id="kvSunoTopLogoBg" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#24e46a"/><stop offset="50%" stop-color="#1ac456"/><stop offset="100%" stop-color="#0a7a34"/></linearGradient></defs><rect x="14" y="14" width="484" height="484" rx="114" fill="url(#kvSunoTopLogoBg)"/><rect x="16.5" y="16.5" width="479" height="479" rx="111.5" fill="none" stroke="#ffffff" stroke-opacity="0.24" stroke-width="6"/><circle cx="256" cy="256" r="178" fill="#0b0f13" stroke="#ffffff" stroke-opacity="0.16" stroke-width="5"/><circle cx="256" cy="256" r="156" fill="none" stroke="#1ed760" stroke-opacity="0.22" stroke-width="3"/><rect x="155" y="216" width="27" height="80" rx="13.5" fill="#ffffff" fill-opacity="0.92"/><rect x="199" y="178.5" width="27" height="155" rx="13.5" fill="#22e568"/><rect x="242.5" y="152" width="27" height="208" rx="13.5" fill="#ffffff"/><rect x="286" y="189" width="27" height="134" rx="13.5" fill="#22e568"/><rect x="330" y="226" width="27" height="72" rx="13.5" fill="#ffffff" fill-opacity="0.92"/><path d="M344 140 L352 164 L376 172 L352 180 L344 204 L336 180 L312 172 L336 164 Z" fill="#24eb6c"/><path d="M344 154 L348.5 167.5 L362 172 L348.5 176.5 L344 190 L339.5 176.5 L326 172 L339.5 167.5 Z" fill="#ffffff"/></svg>`,
+  brandWave: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M3 10v4m4.2-7v10M11.5 4v16m4.3-12v8m4.2-5v3"/><path d="M19.5 3.5l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" fill="currentColor" stroke="none"/></svg>`,
   home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V9.5z"/></svg>`,
   search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
   browse: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
@@ -1928,9 +1929,9 @@ function mountSpotifyAppShell() {
   topbar.id = 'kv-sp-topbar';
   topbar.innerHTML = `
     <div class="kv-sp-topbar-left">
-      <div class="kv-sp-brand" id="kv-sp-brand-home" title="kv-suno Zen Stream">
-        <div class="kv-sp-brand-logo">${SP_ICONS.brandWave}</div>
-        <span class="kv-sp-brand-name">kv-suno</span>
+      <div class="kv-sp-brand" id="kv-sp-brand-home" title="KV Suno — AI Music Streaming & Prompt Studio">
+        <div class="kv-sp-brand-logo">${SP_ICONS.brandLogo}</div>
+        <span class="kv-sp-brand-name">KV Suno</span>
       </div>
 
       <div class="kv-sp-history-nav" role="group" aria-label="Navigation History">

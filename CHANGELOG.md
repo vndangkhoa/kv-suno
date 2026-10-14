@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.1] - 2026-10-14
+
+### 🎨 Unified Brand Identity, Web App Logo, PWA & Synology DSM Icon Suite
+- **Unified KV Suno Emblem (`gen_kvsuno_icon.py`)**:
+  - Designed a cohesive 4x-supersampled **Spotify Encore Emerald Squircle (`#24e46a` → `#1ac456` → `#0a7a34`)** housing an **Obsidian Studio Disc (`#0b0f13`)**, **5 Harmonic Equalizer Bars**, and an **AI 4-Point Sparkle Star (`✦`)**.
+  - Applied the exact same brand mark across the **Web App Topbar Logo (`#kv-sp-brand-home`)**, **Browser Favicons (`favicon.svg`, `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `favicon.png`)**, **iOS Home Screen (`apple-touch-icon.png` 180×180)**, **PWA Standard & Maskable Icons (`pwa-192.png`, `pwa-512.png`, `pwa-maskable-192.png`, `pwa-maskable-512.png`)**, **Open Graph Social Banner (`og-image.png` 1200×630)**, and **Synology DSM SPK Package (`PACKAGE_ICON.PNG`, `PACKAGE_ICON_256.PNG`, `KVSuno-{16..256}.png`)**.
+- **Complete PWA Manifest & Lock-Screen Artwork Fallbacks**:
+  - Updated `public/site.webmanifest` and `public/index.html` with full SVG, standard PNG (`any`), and Android adaptive `maskable` icon definitions (`192×192` and `512×512`).
+
+---
+
 ## [2.0.0] - 2026-10-14
 
 ### 🚀 Major Milestone Release — Spotify Zen Streaming & PWA Media Edition

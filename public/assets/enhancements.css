@@ -183,15 +183,23 @@ html, body {
 }
 
 .kv-sp-brand-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--sp-green);
-  color: var(--sp-black);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  filter: drop-shadow(0 2px 6px rgba(30, 215, 96, 0.25));
+}
+
+.kv-sp-brand-logo svg,
+.kv-sp-brand-logo img {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .kv-sp-brand-name {

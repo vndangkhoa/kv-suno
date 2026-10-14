@@ -1,21 +1,33 @@
 {
-  "name": "kv-suno — AI Music Streaming & Prompt Studio",
-  "short_name": "kv-suno",
-  "description": "Không gian nghe nhạc Suno AI và sáng tạo Prompt Studio chuẩn Spotify với điều khiển màn hình khóa & phát nền.",
+  "name": "KV Suno — AI Music Streaming & Prompt Studio",
+  "short_name": "KV Suno",
+  "description": "Không gian nghe nhạc Suno AI, Bảng xếp hạng Bài hát Hot & 32 Creators, Xem lời bài hát và sáng tạo Prompt Studio chuẩn Spotify với điều khiển màn hình khóa & phát nền.",
   "id": "/",
   "start_url": "/?mode=songs",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#090b0e",
+  "theme_color": "#090b0e",
   "lang": "vi",
   "categories": ["music", "entertainment", "multimedia", "productivity"],
   "icons": [
     {
-      "src": "/pwa-192.png",
-      "sizes": "192x192",
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
@@ -23,7 +35,7 @@
       "src": "/pwa-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     },
     {
       "src": "/pwa-512.png",
@@ -32,7 +44,13 @@
       "purpose": "any"
     },
     {
-      "src": "/pwa-512.png",
+      "src": "/pwa-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
