@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.2] - 2026-11-17
+
+### 🎨 Unified Brand Logo, PWA Manifest & Media Control Card Consistency
+- **Unified Master Brand Icons (`icon.svg`, `logo.svg`, `favicon.svg`, `icon-maskable.svg`)**:
+  - Standardized the 4x-supersampled **KV Suno Emerald Squircle (`#24E56A` → `#1ED760` → `#0D8A3B`)** with Obsidian Studio Disc (`#0B0E11`), 5 Harmonic Equalizer Bars, and 4-point AI Sparkle Star (`✦`) across all SVG and PNG sizes (`72×72` through `512×512` in `/icons/`, plus root PWA/Apple/Favicon/ICO/OG banner assets).
+- **Reusable Brand Logo & Media Control Card Synchronization**:
+  - Added `renderKvSunoLogo()` with unique SVG gradient IDs and two-tone **KV Suno** + `AI` badge styling across the topbar, left sidebar, right Now Playing inspector header, center stage badge, Liked Songs hero, and bottom/mobile mini-player metadata row.
+  - Synchronized transport controls (`Prev`, `Play/Pause`, `Next`, `-10s`, `+10s`) across the OS `navigator.mediaSession` lock-screen card, bottom player bar, mobile floating mini-player (with live `currentTime / duration` readout), right Now-Playing Inspector card, and center stage lyrics card.
+- **PWA Manifest & Service Worker Upgrade (`v6.6`)**:
+  - Unified `#000000` theme/background colors across `public/index.html`, `public/site.webmanifest`, and `public/manifest.json`, upgraded `public/sw.js` with shell pre-caching (bypassing `Range` and `/api/` streams for uninterrupted background playback), and updated PWA install handling with `navigator.install()` + `beforeinstallprompt` fallback.
+
+---
+
 ## [2.0.1] - 2026-10-14
 
 ### 🎨 Unified Brand Identity, Web App Logo, PWA & Synology DSM Icon Suite

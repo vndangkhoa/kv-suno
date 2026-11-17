@@ -1,11 +1,11 @@
 /**
- * kv-suno — Spotify Zen ("Pure Stream & Inspector") Architecture & Audio Engine (v6.0)
+ * KV Suno — Spotify Zen ("Pure Stream & Inspector") Architecture & Audio Engine (v6.6)
  * - Full Left Sidebar with 6 Zen Modes (Discover, Songs, Creators, Prompt Studio, Sound Wiki, Liked Songs) + 12 Pinned Creators + Prompt Cart
  * - Full Center Showcase with Live Lyrics Reader Stage + Dedicated Hot Songs Chart & Creators Leaderboard Views
  * - Clean Right Track DNA & Full Lyrics Inspector (strips promo spam headers, highlights [Verse]/[Chorus] metatags)
  */
 
-import { ensureZenCustomTabsMounted, activateZenCreatorsTab, activateZenSongsTab } from './zen-tabs.js?v=6.5';
+import { ensureZenCustomTabsMounted, activateZenCreatorsTab, activateZenSongsTab } from './zen-tabs.js?v=6.6';
 
 // Ensure React's Prompt Studio composer is mounted (never collapsed into floating pill)
 try {
@@ -159,7 +159,7 @@ function registerClipsInGlobalRegistry(clips, defaultHandle = '') {
       title: (c.title || prev.title || 'Untitled Track').trim(),
       handle: (c.handle || defaultHandle || prev.handle || 'futurescall').replace(/^@/, ''),
       display_name: c.display_name || prev.display_name || 'Suno Creator',
-      image_url: c.image_url || prev.image_url || `/favicon.png`,
+      image_url: c.image_url || prev.image_url || `/icon.svg`,
       metadata: {
         ...(prev.metadata || {}),
         ...(c.metadata || {}),
@@ -220,10 +220,47 @@ window.fetch = async function (...args) {
 };
 
 // ============================================================================
-// 1. Authored Inline SVG Icon Library & Top Creators Catalog
+// 1. Unified Brand Logo Helper, Inline SVG Icon Library & Top Creators Catalog
 // ============================================================================
+let _kvLogoUidCounter = 0;
+
+export function renderKvSunoLogo({ size = 32, showText = true, showBadge = true, className = '' } = {}) {
+  _kvLogoUidCounter += 1;
+  const uid = `kvs-${_kvLogoUidCounter}`;
+  const bgId = `kv-logo-bg-${uid}`;
+  const sheenId = `kv-logo-sheen-${uid}`;
+  const radius = Math.max(4, Math.round(size * 0.22));
+  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KV Suno" style="flex-shrink:0;display:block;border-radius:${radius}px;"><defs><linearGradient id="${bgId}" x1="48" y1="24" x2="464" y2="488" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#24E56A"/><stop offset="52%" stop-color="#1ED760"/><stop offset="100%" stop-color="#0D8A3B"/></linearGradient><linearGradient id="${sheenId}" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22"/><stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.02"/><stop offset="100%" stop-color="#000000" stop-opacity="0.2"/></linearGradient></defs><rect x="16" y="16" width="480" height="480" rx="112" fill="url(#${bgId})"/><rect x="16" y="16" width="480" height="480" rx="112" fill="url(#${sheenId})"/><rect x="20" y="20" width="472" height="472" rx="108" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="4"/><circle cx="256" cy="256" r="174" fill="#0B0E11" stroke="#1ED760" stroke-opacity="0.32" stroke-width="4"/><circle cx="256" cy="256" r="154" stroke="#1ED760" stroke-opacity="0.2" stroke-width="2.5"/><rect x="152" y="216" width="28" height="80" rx="14" fill="#FFFFFF" fill-opacity="0.94"/><rect x="196" y="176" width="28" height="160" rx="14" fill="#1ED760"/><rect x="242" y="148" width="28" height="216" rx="14" fill="#FFFFFF"/><rect x="288" y="188" width="28" height="136" rx="14" fill="#1ED760"/><rect x="332" y="224" width="28" height="72" rx="14" fill="#FFFFFF" fill-opacity="0.94"/><path d="M346 130 L354.5 155.5 L380 164 L354.5 172.5 L346 198 L337.5 172.5 L312 164 L337.5 155.5 Z" fill="#24EB6C"/><path d="M346 144 L351 159 L366 164 L351 169 L346 184 L341 169 L326 164 L341 159 Z" fill="#FFFFFF"/></svg>`;
+  if (!showText) {
+    return `<span class="kv-brand-logo-wrap ${className}" style="display:inline-flex;align-items:center;line-height:1;user-select:none;">${svg}</span>`;
+  }
+  const textSize = Math.max(12, Math.round(size * 0.56));
+  const badgeHtml = showBadge ? `<span class="kv-logo-ai-badge">AI</span>` : '';
+  return `<span class="kv-brand-logo-wrap ${className}" style="display:inline-flex;align-items:center;gap:${Math.max(5, Math.round(size * 0.28))}px;line-height:1;user-select:none;">${svg}<span class="kv-logo-wordmark kv-sp-brand-name" style="font-size:${textSize}px;"><span class="kv-logo-kv">KV</span><span class="kv-logo-suno">Suno</span>${badgeHtml}</span></span>`;
+}
+
+if (typeof window !== 'undefined') {
+  window.kvRenderLogo = renderKvSunoLogo;
+}
+
+function applyTrackCover(imgEl, url) {
+  if (!imgEl) return;
+  const src = url || '/icon.svg';
+  const isFallback = /\/(icon\.svg|logo\.svg|favicon\.svg|favicon\.png|pwa-512\.png)(\?|$)/i.test(src);
+  imgEl.classList.toggle('kv-is-fallback-icon', isFallback);
+  imgEl.onerror = () => {
+    if (!imgEl.dataset.fallbackApplied) {
+      imgEl.dataset.fallbackApplied = '1';
+      imgEl.src = '/icon.svg';
+      imgEl.classList.add('kv-is-fallback-icon');
+    }
+  };
+  delete imgEl.dataset.fallbackApplied;
+  imgEl.src = src;
+}
+
 const SP_ICONS = {
-  brandLogo: `<svg width="34" height="34" viewBox="0 0 512 512" role="img" aria-label="KV Suno"><defs><linearGradient id="kvSunoTopLogoBg" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#24e46a"/><stop offset="50%" stop-color="#1ac456"/><stop offset="100%" stop-color="#0a7a34"/></linearGradient></defs><rect x="14" y="14" width="484" height="484" rx="114" fill="url(#kvSunoTopLogoBg)"/><rect x="16.5" y="16.5" width="479" height="479" rx="111.5" fill="none" stroke="#ffffff" stroke-opacity="0.24" stroke-width="6"/><circle cx="256" cy="256" r="178" fill="#0b0f13" stroke="#ffffff" stroke-opacity="0.16" stroke-width="5"/><circle cx="256" cy="256" r="156" fill="none" stroke="#1ed760" stroke-opacity="0.22" stroke-width="3"/><rect x="155" y="216" width="27" height="80" rx="13.5" fill="#ffffff" fill-opacity="0.92"/><rect x="199" y="178.5" width="27" height="155" rx="13.5" fill="#22e568"/><rect x="242.5" y="152" width="27" height="208" rx="13.5" fill="#ffffff"/><rect x="286" y="189" width="27" height="134" rx="13.5" fill="#22e568"/><rect x="330" y="226" width="27" height="72" rx="13.5" fill="#ffffff" fill-opacity="0.92"/><path d="M344 140 L352 164 L376 172 L352 180 L344 204 L336 180 L312 172 L336 164 Z" fill="#24eb6c"/><path d="M344 154 L348.5 167.5 L362 172 L348.5 176.5 L344 190 L339.5 176.5 L326 172 L339.5 167.5 Z" fill="#ffffff"/></svg>`,
+  brandLogo: renderKvSunoLogo({ size: 32, showText: false, showBadge: false }),
   brandWave: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M3 10v4m4.2-7v10M11.5 4v16m4.3-12v8m4.2-5v3"/><path d="M19.5 3.5l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" fill="currentColor" stroke="none"/></svg>`,
   home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V9.5z"/></svg>`,
   search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
@@ -235,6 +272,8 @@ const SP_ICONS = {
   pause: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>`,
   prev: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="4" width="2.5" height="16"/></svg>`,
   next: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="16.5" y="4" width="2.5" height="16"/></svg>`,
+  seekBack10: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><text x="12" y="15.5" text-anchor="middle" fill="currentColor" stroke="none" font-size="7.5" font-weight="800" font-family="sans-serif">10</text></svg>`,
+  seekFwd10: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/><text x="12" y="15.5" text-anchor="middle" fill="currentColor" stroke="none" font-size="7.5" font-weight="800" font-family="sans-serif">10</text></svg>`,
   shuffle: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>`,
   repeat: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
   repeatOne: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><path d="M11 10h1v4"/></svg>`,
@@ -505,11 +544,13 @@ class KvMusicPlayer {
       if (durEl && this.audio.duration && !isNaN(this.audio.duration)) {
         durEl.textContent = this.formatTime(this.audio.duration);
       }
+      this.updateProgressUI();
       this.syncMediaSessionPositionState();
       this.preloadUpcomingTracks();
     });
 
     this.audio.addEventListener('durationchange', () => {
+      this.updateProgressUI();
       this.syncMediaSessionPositionState();
     });
 
@@ -633,7 +674,7 @@ class KvMusicPlayer {
     const normalized = {
       id: trackId,
       title: (track.title || reg.title || track.name || 'Suno Music Track').trim(),
-      image_url: track.image_url || reg.image_url || track.image_large_url || '/favicon.png',
+      image_url: track.image_url || reg.image_url || track.image_large_url || '/icon.svg',
       handle: (track.handle || reg.handle || (track.display_name ? `${track.display_name}` : 'futurescall')).replace(/^@/, ''),
       display_name: track.display_name || reg.display_name || track.handle || 'Suno Artist',
       play_count: track.play_count ?? reg.play_count ?? 0,
@@ -1071,8 +1112,8 @@ class KvMusicPlayer {
     if (this.currentTrack) {
       const handle = (this.currentTrack.handle || 'futurescall').replace(/^@/, '');
       document.title = isPlaying
-        ? `▶ ${this.currentTrack.title} — @${handle} | kv-suno`
-        : 'kv-suno — AI Music Streaming & Prompt Studio';
+        ? `▶ ${this.currentTrack.title} — @${handle} | KV Suno`
+        : 'KV Suno — AI Music Streaming & Prompt Studio';
     }
   }
 
@@ -1103,14 +1144,36 @@ class KvMusicPlayer {
       try {
         return new URL(url, origin).href;
       } catch (e) {
-        return `${origin}/pwa-512.png`;
+        return `${origin}/icons/icon-512x512.png`;
       }
     };
 
-    const coverUrl = track.image_url ? toAbsUrl(track.image_url) : `${origin}/pwa-512.png`;
+    const rawCover = track.image_url || '';
+    const isLocalFallback = !rawCover || /\/(icon\.svg|logo\.svg|favicon\.svg|favicon\.png|pwa-512\.png)(\?|$)/i.test(rawCover);
+    const coverUrl = isLocalFallback ? `${origin}/icons/icon-512x512.png` : toAbsUrl(rawCover);
     const isPng = /\.png(\?|$)/i.test(coverUrl);
     const isWebp = /\.webp(\?|$)/i.test(coverUrl);
     const mimeType = isPng ? 'image/png' : isWebp ? 'image/webp' : 'image/jpeg';
+
+    const artwork = isLocalFallback
+      ? [
+          { src: `${origin}/icons/icon-96x96.png`, sizes: '96x96', type: 'image/png' },
+          { src: `${origin}/icons/icon-128x128.png`, sizes: '128x128', type: 'image/png' },
+          { src: `${origin}/icons/icon-192x192.png`, sizes: '192x192', type: 'image/png' },
+          { src: `${origin}/icons/icon-256x256.png`, sizes: '256x256', type: 'image/png' },
+          { src: `${origin}/icons/icon-384x384.png`, sizes: '384x384', type: 'image/png' },
+          { src: `${origin}/icons/icon-512x512.png`, sizes: '512x512', type: 'image/png' }
+        ]
+      : [
+          { src: coverUrl, sizes: '96x96', type: mimeType },
+          { src: coverUrl, sizes: '128x128', type: mimeType },
+          { src: coverUrl, sizes: '192x192', type: mimeType },
+          { src: coverUrl, sizes: '256x256', type: mimeType },
+          { src: coverUrl, sizes: '384x384', type: mimeType },
+          { src: coverUrl, sizes: '512x512', type: mimeType },
+          { src: `${origin}/icons/icon-192x192.png`, sizes: '192x192', type: 'image/png' },
+          { src: `${origin}/icons/icon-512x512.png`, sizes: '512x512', type: 'image/png' }
+        ];
 
     const handle = (track.handle || 'futurescall').replace(/^@/, '');
     const artistName =
@@ -1128,17 +1191,8 @@ class KvMusicPlayer {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title || 'Suno Music Track',
         artist: artistName,
-        album: `kv-suno • ${primaryGenre}`,
-        artwork: [
-          { src: coverUrl, sizes: '96x96', type: mimeType },
-          { src: coverUrl, sizes: '128x128', type: mimeType },
-          { src: coverUrl, sizes: '192x192', type: mimeType },
-          { src: coverUrl, sizes: '256x256', type: mimeType },
-          { src: coverUrl, sizes: '384x384', type: mimeType },
-          { src: coverUrl, sizes: '512x512', type: mimeType },
-          { src: `${origin}/pwa-192.png`, sizes: '192x192', type: 'image/png' },
-          { src: `${origin}/pwa-512.png`, sizes: '512x512', type: 'image/png' }
-        ]
+        album: `KV Suno — ${primaryGenre}`,
+        artwork
       });
     } catch (e) {}
 
@@ -1181,22 +1235,34 @@ class KvMusicPlayer {
   updateTrackInfoUI(track) {
     const coverEl = document.getElementById('kv-player-cover');
     const titleEl = document.getElementById('kv-player-title');
+    const artistLinkEl = document.querySelector('#kv-player-artist .kv-player-artist-link');
     const artistEl = document.getElementById('kv-player-artist');
     const sunoLink = document.getElementById('kv-player-suno-link');
 
     if (coverEl) {
-      coverEl.src = track.image_url || '/favicon.png';
+      applyTrackCover(coverEl, track.image_url);
       coverEl.alt = track.title || 'Track Cover';
     }
     if (titleEl) {
       titleEl.textContent = track.title || 'Untitled Track';
       titleEl.title = track.title || '';
     }
-    if (artistEl) {
-      const handle = (track.handle || '').replace(/^@/, '');
-      artistEl.innerHTML = handle
-        ? `<a href="https://suno.com/@${handle}" target="_blank" rel="noreferrer">@${handle}</a>`
-        : (track.display_name || 'Suno Artist');
+    const handle = (track.handle || '').replace(/^@/, '');
+    if (artistLinkEl) {
+      if (handle) {
+        artistLinkEl.href = `https://suno.com/@${handle}`;
+        artistLinkEl.textContent = `@${handle}`;
+      } else {
+        artistLinkEl.removeAttribute('href');
+        artistLinkEl.textContent = track.display_name || 'Suno Artist';
+      }
+    } else if (artistEl) {
+      const durText = this.formatTime(track.metadata?.duration || 0);
+      artistEl.innerHTML = `${renderKvSunoLogo({ size: 13, showText: false })}${
+        handle
+          ? `<a class="kv-player-artist-link" href="https://suno.com/@${handle}" target="_blank" rel="noreferrer">@${handle}</a>`
+          : `<span class="kv-player-artist-link">${track.display_name || 'Suno Artist'}</span>`
+      }<span class="kv-player-mobile-sep">•</span><span id="kv-player-mobile-time" class="kv-player-mobile-time kv-tabular">0:00${durText !== '0:00' ? ` / ${durText}` : ''}</span>`;
     }
     if (sunoLink) {
       sunoLink.href = `https://suno.com/song/${track.id}`;
@@ -1207,6 +1273,12 @@ class KvMusicPlayer {
     if (durEl && dur) {
       durEl.textContent = this.formatTime(dur);
     }
+    const mobileTimeEl = document.getElementById('kv-player-mobile-time');
+    if (mobileTimeEl) {
+      const curText = this.formatTime(this.audio.currentTime || 0);
+      const durVal = (this.audio.duration && !isNaN(this.audio.duration) ? this.audio.duration : dur) || 0;
+      mobileTimeEl.textContent = durVal > 0 ? `${curText} / ${this.formatTime(durVal)}` : curText;
+    }
 
     updateAmbientColorFromTrack(track);
     this.updateLikeButtonUI();
@@ -1215,11 +1287,22 @@ class KvMusicPlayer {
 
   updatePlayStateUI(isPlaying) {
     const playBtn = document.getElementById('kv-btn-play');
+    const npPlayBtn = document.getElementById('kv-sp-np-play-btn');
+    const stagePlayBtn = document.getElementById('kv-stage-play-btn');
     const eqBars = document.querySelectorAll('.kv-player-eq span');
 
     if (playBtn) {
       playBtn.innerHTML = isPlaying ? SP_ICONS.pause : SP_ICONS.play;
       playBtn.title = isPlaying ? 'Pause (Space)' : 'Play (Space)';
+    }
+    if (npPlayBtn) {
+      npPlayBtn.innerHTML = isPlaying ? SP_ICONS.pause : SP_ICONS.play;
+      npPlayBtn.title = isPlaying ? 'Pause' : 'Play';
+      npPlayBtn.classList.toggle('playing', !!isPlaying);
+    }
+    if (stagePlayBtn) {
+      stagePlayBtn.innerHTML = `${isPlaying ? SP_ICONS.pause : SP_ICONS.play}<span>${isPlaying ? 'Pause' : 'Play'}</span>`;
+      stagePlayBtn.title = isPlaying ? 'Pause (Space)' : 'Play (Space)';
     }
 
     eqBars.forEach(b => {
@@ -1231,14 +1314,19 @@ class KvMusicPlayer {
     const curEl = document.getElementById('kv-player-current');
     const fillEl = document.getElementById('kv-scrubber-fill');
     const thumbEl = document.getElementById('kv-scrubber-thumb');
+    const mobileTimeEl = document.getElementById('kv-player-mobile-time');
 
     const cur = this.audio.currentTime || 0;
-    const dur = this.audio.duration || 1;
+    const rawDur = (this.audio.duration && !isNaN(this.audio.duration) ? this.audio.duration : this.currentTrack?.metadata?.duration) || 0;
+    const dur = rawDur || 1;
     const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
 
     if (curEl) curEl.textContent = this.formatTime(cur);
     if (fillEl) fillEl.style.width = `${pct}%`;
     if (thumbEl) thumbEl.style.left = `${pct}%`;
+    if (mobileTimeEl) {
+      mobileTimeEl.textContent = rawDur > 0 ? `${this.formatTime(cur)} / ${this.formatTime(rawDur)}` : this.formatTime(cur);
+    }
   }
 
   updateVolumeUI() {
@@ -1306,7 +1394,7 @@ class KvMusicPlayer {
     const dnaWrap = document.getElementById('kv-sp-np-dna-tags');
     const dnaCountEl = document.getElementById('kv-sp-np-dna-count');
 
-    if (coverEl) coverEl.src = track.image_url || '/favicon.png';
+    if (coverEl) applyTrackCover(coverEl, track.image_url);
     if (titleEl) {
       titleEl.textContent = track.title || 'Untitled Track';
       titleEl.title = track.title || '';
@@ -1815,7 +1903,7 @@ function renderLikedSongsPlaylist() {
       window.kvPlayer.queue.find(t => t.id === id) || {
         id,
         title: `Suno Track (${id.slice(0, 8)})`,
-        image_url: '/favicon.png',
+        image_url: '/icon.svg',
         handle: 'futurescall',
         metadata: { tags: 'Suno AI Studio Track' }
       }
@@ -1830,8 +1918,8 @@ function renderLikedSongsPlaylist() {
       <div class="kv-sp-playlist-info">
         <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sp-text-subdued);">Saved Collection</div>
         <h1>Liked Songs</h1>
-        <div style="font-size: 13px; color: var(--sp-text-subdued);">
-          <span style="color: var(--sp-text-primary); font-weight: 700;">kv-suno</span> • <span class="kv-tabular">${likedTracks.length} songs</span>
+        <div style="font-size: 13px; color: var(--sp-text-subdued); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          ${renderKvSunoLogo({ size: 16, showText: true, showBadge: false })} <span>•</span> <span class="kv-tabular">${likedTracks.length} songs</span>
         </div>
       </div>
     </div>
@@ -1865,7 +1953,7 @@ function renderLikedSongsPlaylist() {
                      <td class="kv-tabular">${idx + 1}</td>
                      <td>
                        <div style="display: flex; align-items: center; gap: 12px;">
-                         <img src="${t.image_url || '/favicon.png'}" alt="" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" />
+                         <img src="${t.image_url || '/icon.svg'}" onerror="this.src='/icon.svg'" alt="" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" />
                          <div style="min-width: 0;">
                            <div style="color: var(--sp-text-primary); font-weight: 600;">${t.title || 'Untitled'}</div>
                            <div style="font-size: 11px; color: var(--sp-text-muted); max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${getShortLyricsPreview(t)}</div>
@@ -1930,8 +2018,7 @@ function mountSpotifyAppShell() {
   topbar.innerHTML = `
     <div class="kv-sp-topbar-left">
       <div class="kv-sp-brand" id="kv-sp-brand-home" title="KV Suno — AI Music Streaming & Prompt Studio">
-        <div class="kv-sp-brand-logo">${SP_ICONS.brandLogo}</div>
-        <span class="kv-sp-brand-name">KV Suno</span>
+        ${renderKvSunoLogo({ size: 32, showText: true, showBadge: true, className: 'kv-sp-brand-inner' })}
       </div>
 
       <div class="kv-sp-history-nav" role="group" aria-label="Navigation History">
@@ -2014,7 +2101,7 @@ function mountSpotifyAppShell() {
   leftSidebar.innerHTML = `
     <div class="kv-sp-lib-header">
       <button type="button" class="kv-sp-lib-title-btn" id="kv-sp-collapse-lib" title="Collapse or Expand Navigation Rail">
-        ${SP_ICONS.library}
+        ${renderKvSunoLogo({ size: 20, showText: false })}
         <span class="kv-sp-lib-title-text">Workspace</span>
       </button>
       <div class="kv-sp-lib-actions">
@@ -2173,16 +2260,17 @@ function mountSpotifyAppShell() {
   rightSidebar.setAttribute('aria-label', 'Now Playing Track DNA & Lyrics Inspector');
   rightSidebar.innerHTML = `
     <div class="kv-sp-np-header">
-      <span class="kv-sp-np-source"><span class="kv-sp-np-live-dot"></span><span>Now Playing DNA & Lyrics</span></span>
+      <span class="kv-sp-np-source">${renderKvSunoLogo({ size: 16, showText: false })}<span class="kv-sp-np-live-dot"></span><span>Now Playing DNA &amp; Lyrics</span></span>
       <button type="button" class="kv-sp-circle-btn" id="kv-sp-close-right" title="Close Inspector">${SP_ICONS.close}</button>
     </div>
 
     <div id="kv-sp-right-body">
-      <!-- Compact 56x56 Horizontal Track Header Card -->
+      <!-- Compact 56x56 Horizontal Track Header Card (Media Control Card) -->
       <div class="kv-sp-np-compact-track">
         <div class="kv-sp-np-compact-left">
           <div class="kv-sp-np-cover-wrap">
-            <img id="kv-sp-np-cover" class="kv-sp-np-cover" src="${track.image_url || '/favicon.png'}" alt="${track.title || ''}" />
+            <img id="kv-sp-np-cover" class="kv-sp-np-cover" src="${track.image_url || '/icon.svg'}" alt="${track.title || ''}" />
+            <button type="button" id="kv-sp-np-play-btn" class="kv-sp-np-cover-play" title="Play / Pause" aria-label="Play or Pause">${SP_ICONS.play}</button>
           </div>
           <div class="kv-sp-np-meta">
             <h2 id="kv-sp-np-title" class="kv-sp-np-title">${track.title || 'Duyên Lỡ .. Lỡ Duyên'}</h2>
@@ -2190,6 +2278,8 @@ function mountSpotifyAppShell() {
           </div>
         </div>
         <div class="kv-sp-np-actions-row">
+          <button type="button" id="kv-sp-np-prev" class="kv-sp-circle-btn kv-sp-np-ctrl-btn" title="Previous Track" aria-label="Previous Track">${SP_ICONS.prev}</button>
+          <button type="button" id="kv-sp-np-next" class="kv-sp-circle-btn kv-sp-np-ctrl-btn" title="Next Track" aria-label="Next Track">${SP_ICONS.next}</button>
           <button type="button" id="kv-sp-np-like" class="kv-player-like-btn" title="Save to Liked Songs">${SP_ICONS.heartOutline}</button>
           <a id="kv-sp-np-download" class="kv-sp-circle-btn" href="/api/suno-audio-proxy?input=${track.id}" download="${track.id}.m4a" title="Download .m4a Audio">${SP_ICONS.download}</a>
         </div>
@@ -2305,21 +2395,37 @@ function mountSpotifyAppShell() {
     showToast('Lock-Screen Media Control & Background Play Active');
   });
   const installPwaBtn = document.getElementById('kv-sp-install-pwa');
-  if (window._kvDeferredPwaPrompt && installPwaBtn) {
+  const supportsWebInstall = typeof Navigator !== 'undefined' && typeof Navigator.prototype.install === 'function';
+  if (installPwaBtn && (supportsWebInstall || window._kvDeferredPwaPrompt)) {
     installPwaBtn.style.display = 'flex';
   }
   installPwaBtn?.addEventListener('click', async () => {
+    if (installPwaBtn.getAttribute('aria-disabled') === 'true') return;
     toolsDropdown?.classList.remove('open');
-    const promptEvent = window._kvDeferredPwaPrompt;
-    if (promptEvent && typeof promptEvent.prompt === 'function') {
-      promptEvent.prompt();
-      try {
-        await promptEvent.userChoice;
-      } catch (e) {}
-      window._kvDeferredPwaPrompt = null;
-      installPwaBtn.style.display = 'none';
-    } else {
-      showToast('Use browser menu → "Add to Home Screen" / "Install App"');
+    installPwaBtn.setAttribute('aria-disabled', 'true');
+    try {
+      if (supportsWebInstall) {
+        await navigator.install();
+        showToast('KV Suno app installed or opened');
+        installPwaBtn.style.display = 'none';
+      } else if (window._kvDeferredPwaPrompt) {
+        const promptEvent = window._kvDeferredPwaPrompt;
+        window._kvDeferredPwaPrompt = null;
+        await promptEvent.prompt();
+        const { outcome } = await promptEvent.userChoice;
+        showToast(outcome === 'accepted' ? 'KV Suno PWA installed!' : 'Installation canceled');
+        if (!window._kvDeferredPwaPrompt) {
+          installPwaBtn.style.display = 'none';
+        }
+      }
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        showToast('Installation canceled or could not complete');
+      } else {
+        console.warn('[KV Suno] PWA install failed:', err);
+      }
+    } finally {
+      installPwaBtn.removeAttribute('aria-disabled');
     }
   });
   document.getElementById('kv-sp-open-dsp')?.addEventListener('click', () => {
@@ -2432,6 +2538,15 @@ function mountSpotifyAppShell() {
   document.getElementById('kv-sp-close-right')?.addEventListener('click', () => {
     window.kvPlayer.toggleLyrics(false);
   });
+  document.getElementById('kv-sp-np-play-btn')?.addEventListener('click', () => {
+    window.kvPlayer.togglePlay();
+  });
+  document.getElementById('kv-sp-np-prev')?.addEventListener('click', () => {
+    window.kvPlayer.prev();
+  });
+  document.getElementById('kv-sp-np-next')?.addEventListener('click', () => {
+    window.kvPlayer.next();
+  });
   document.getElementById('kv-sp-np-like')?.addEventListener('click', () => {
     window.kvPlayer.toggleLike();
   });
@@ -2475,7 +2590,7 @@ function updateCenterLyricsStage(track) {
   const tagsEl = stage.querySelector('#kv-stage-tags');
   const lyricsEl = stage.querySelector('#kv-stage-lyrics');
 
-  if (coverEl) coverEl.src = track.image_url || '/favicon.png';
+  if (coverEl) applyTrackCover(coverEl, track.image_url);
   if (titleEl) titleEl.textContent = track.title || 'Untitled Track';
   if (handleEl) {
     const h = (track.handle || 'futurescall').replace(/^@/, '');
@@ -2510,24 +2625,31 @@ function ensureShowcaseRichSections() {
   // 1. Top Live Lyrics & Active Track Stage Banner inside Featured Showcase
   if (!document.getElementById('kv-center-lyrics-stage')) {
     const cur = window.kvPlayer?.currentTrack || DEFAULT_TRACK;
+    const isPlaying = Boolean(window.kvPlayer?.isPlaying);
     const stageEl = document.createElement('div');
     stageEl.id = 'kv-center-lyrics-stage';
     stageEl.className = 'kv-center-lyrics-stage';
     stageEl.innerHTML = `
       <div class="kv-stage-left">
         <div class="kv-stage-track-row">
-          <img id="kv-stage-cover" src="${cur.image_url || '/favicon.png'}" alt="" class="kv-stage-cover" />
+          <img id="kv-stage-cover" src="${cur.image_url || '/icon.svg'}" alt="" class="kv-stage-cover" />
           <div style="min-width: 0; flex: 1;">
-            <span class="kv-stage-badge">🎤 NOW PLAYING & FULL LYRICS</span>
+            <span class="kv-stage-badge">${renderKvSunoLogo({ size: 14, showText: false })}<span>NOW PLAYING &amp; FULL LYRICS</span></span>
             <h3 id="kv-stage-title" class="kv-stage-title">${cur.title || 'Duyên Lỡ .. Lỡ Duyên'}</h3>
             <p id="kv-stage-handle" class="kv-stage-handle">@${(cur.handle || 'futurescall').replace(/^@/, '')}</p>
           </div>
         </div>
         <div id="kv-stage-tags" class="kv-stage-tags"></div>
         <div class="kv-stage-actions">
+          <button type="button" class="kv-sp-circle-btn" id="kv-stage-prev-btn" title="Previous Track" aria-label="Previous Track">
+            ${SP_ICONS.prev}
+          </button>
           <button type="button" class="kv-sp-pill-btn primary" id="kv-stage-play-btn">
-            ${SP_ICONS.play}
-            <span>Play / Pause</span>
+            ${isPlaying ? SP_ICONS.pause : SP_ICONS.play}
+            <span>${isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+          <button type="button" class="kv-sp-circle-btn" id="kv-stage-next-btn" title="Next Track" aria-label="Next Track">
+            ${SP_ICONS.next}
           </button>
           <button type="button" class="kv-sp-pill-btn" id="kv-stage-copy-lyrics-btn">
             <span>Copy Full Lyrics</span>
@@ -2551,8 +2673,14 @@ function ensureShowcaseRichSections() {
       showcaseContainer.prepend(stageEl);
     }
 
+    stageEl.querySelector('#kv-stage-prev-btn')?.addEventListener('click', () => {
+      window.kvPlayer.prev();
+    });
     stageEl.querySelector('#kv-stage-play-btn')?.addEventListener('click', () => {
       window.kvPlayer.togglePlay();
+    });
+    stageEl.querySelector('#kv-stage-next-btn')?.addEventListener('click', () => {
+      window.kvPlayer.next();
     });
     stageEl.querySelector('#kv-stage-copy-lyrics-btn')?.addEventListener('click', () => {
       const text = getFullTrackLyrics(window.kvPlayer.currentTrack);
@@ -2618,11 +2746,11 @@ function mountBottomPlayer() {
   playerEl.innerHTML = `
     <div class="kv-player-track">
       <div class="kv-player-cover-wrap">
-        <img id="kv-player-cover" class="kv-player-cover" src="${track.image_url || '/favicon.png'}" alt="Cover Art" />
+        <img id="kv-player-cover" class="kv-player-cover" src="${track.image_url || '/icon.svg'}" alt="Cover Art" />
       </div>
       <div class="kv-player-meta">
         <div id="kv-player-title" class="kv-player-title" title="${track.title || ''}">${track.title || 'Duyên Lỡ .. Lỡ Duyên'}</div>
-        <div id="kv-player-artist" class="kv-player-artist"><a href="https://suno.com/@${track.handle || 'futurescall'}" target="_blank" rel="noreferrer">@${track.handle || 'futurescall'}</a></div>
+        <div id="kv-player-artist" class="kv-player-artist">${renderKvSunoLogo({ size: 13, showText: false })}<a class="kv-player-artist-link" href="https://suno.com/@${track.handle || 'futurescall'}" target="_blank" rel="noreferrer">@${track.handle || 'futurescall'}</a><span class="kv-player-mobile-sep">•</span><span id="kv-player-mobile-time" class="kv-player-mobile-time kv-tabular">0:00 / ${initialDur}</span></div>
       </div>
       <button id="kv-btn-like" class="kv-player-like-btn" title="Save to Liked Songs">${SP_ICONS.heartOutline}</button>
     </div>
@@ -2630,9 +2758,11 @@ function mountBottomPlayer() {
     <div class="kv-player-center">
       <div class="kv-player-controls">
         <button id="kv-btn-shuffle" class="kv-ctrl-btn" title="Shuffle">${SP_ICONS.shuffle}</button>
+        <button id="kv-btn-seek-back" class="kv-ctrl-btn" title="Rewind 10s">${SP_ICONS.seekBack10}</button>
         <button id="kv-btn-prev" class="kv-ctrl-btn" title="Previous">${SP_ICONS.prev}</button>
         <button id="kv-btn-play" class="kv-play-btn" title="Play / Pause (Space)">${SP_ICONS.play}</button>
         <button id="kv-btn-next" class="kv-ctrl-btn" title="Next">${SP_ICONS.next}</button>
+        <button id="kv-btn-seek-fwd" class="kv-ctrl-btn" title="Forward 10s">${SP_ICONS.seekFwd10}</button>
         <button id="kv-btn-repeat" class="kv-ctrl-btn" title="Repeat">${SP_ICONS.repeat}</button>
       </div>
 
@@ -2671,11 +2801,18 @@ function mountBottomPlayer() {
 
   document.body.appendChild(playerEl);
 
+  const playerCoverEl = document.getElementById('kv-player-cover');
+  if (playerCoverEl) {
+    applyTrackCover(playerCoverEl, track.image_url);
+  }
+
   if (track) {
     window.kvPlayer?.updateLyricsContent(track);
   }
 
   document.getElementById('kv-btn-play')?.addEventListener('click', () => window.kvPlayer.togglePlay());
+  document.getElementById('kv-btn-seek-back')?.addEventListener('click', () => window.kvPlayer.seek((window.kvPlayer.audio.currentTime || 0) - 10));
+  document.getElementById('kv-btn-seek-fwd')?.addEventListener('click', () => window.kvPlayer.seek((window.kvPlayer.audio.currentTime || 0) + 10));
   document.getElementById('kv-btn-next')?.addEventListener('click', () => window.kvPlayer.next());
   document.getElementById('kv-btn-prev')?.addEventListener('click', () => window.kvPlayer.prev());
   document.getElementById('kv-btn-shuffle')?.addEventListener('click', () => window.kvPlayer.toggleShuffle());
@@ -2911,7 +3048,7 @@ function hookSongCards() {
     const track = {
       id,
       title: titleEl.textContent.trim(),
-      image_url: imgEl ? imgEl.src : reg.image_url || '/favicon.png',
+      image_url: imgEl ? imgEl.src : reg.image_url || '/icon.svg',
       handle: reg.handle || 'futurescall',
       metadata: {
         tags: reg.metadata?.tags || '',
@@ -3081,7 +3218,7 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   window._kvDeferredPwaPrompt = e;
   const installBtn = document.getElementById('kv-sp-install-pwa');
-  if (installBtn) {
+  if (installBtn && !(typeof Navigator !== 'undefined' && typeof Navigator.prototype.install === 'function')) {
     installBtn.style.display = 'flex';
   }
 });

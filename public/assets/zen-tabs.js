@@ -934,7 +934,7 @@ function registerTrackInGlobalRegistry(song) {
     title: (song.title || prev.title || 'Untitled Track').trim(),
     handle: (song.handle || prev.handle || 'futurescall').replace(/^@/, ''),
     display_name: song.display_name || prev.display_name || 'Suno Creator',
-    image_url: song.image_url || prev.image_url || '/favicon.png',
+    image_url: song.image_url || prev.image_url || '/icon.svg',
     play_count: Number(song.play_count ?? prev.play_count ?? 0),
     upvote_count: Number(song.upvote_count ?? prev.upvote_count ?? 0),
     duration,
@@ -1553,7 +1553,7 @@ function renderCreatorsView(targetEl = null) {
                             >
                               <span style="width:20px;font-size:11px;font-weight:800;color:#8e8e8e;font-variant-numeric:tabular-nums;">#${sIdx + 1}</span>
                               <div class="kv-creator-mini-cover" style="width:36px;height:36px;">
-                                <img src="${escapeHtml(song.image_url)}" alt="${escapeHtml(song.title)}" loading="lazy" onerror="this.src='/favicon.png'" />
+                                <img src="${escapeHtml(song.image_url)}" alt="${escapeHtml(song.title)}" loading="lazy" onerror="this.src='/icon.svg';this.classList.add('kv-is-fallback-icon');" />
                               </div>
                               <div style="min-width:0;flex:1;">
                                 <div class="kv-mini-song-title" style="font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(song.title)}">${escapeHtml(song.title)}</div>
@@ -1830,7 +1830,7 @@ function renderSongsView(targetEl = null) {
             (s, idx) => `
             <div class="kv-zen-mosaic-card" data-mosaic-song-id="${escapeHtml(s.id)}" title="Play #${idx + 1}: ${escapeHtml(s.title)}">
               <div class="kv-mosaic-cover-wrap">
-                <img src="${escapeHtml(s.image_url)}" alt="${escapeHtml(s.title)}" onerror="this.src='/favicon.png'" />
+                <img src="${escapeHtml(s.image_url)}" alt="${escapeHtml(s.title)}" onerror="this.src='/icon.svg';this.classList.add('kv-is-fallback-icon');" />
               </div>
               <div style="min-width:0;flex:1;">
                 <div style="font-size:10px;font-weight:800;color:${idx === 0 ? '#f59e0b' : '#1ed760'};letter-spacing:0.05em;">
@@ -1989,7 +1989,7 @@ function renderSongsTableMarkup(chartSongs, activeTrackId, isPlaying) {
                   <td>
                     <div class="kv-song-track-cell">
                       <div class="kv-song-cover-wrap">
-                        <img src="${escapeHtml(song.image_url)}" alt="${escapeHtml(song.title)}" loading="lazy" onerror="this.src='/favicon.png'" />
+                        <img src="${escapeHtml(song.image_url)}" alt="${escapeHtml(song.title)}" loading="lazy" onerror="this.src='/icon.svg';this.classList.add('kv-is-fallback-icon');" />
                       </div>
                       <div class="kv-song-meta-col">
                         <div class="kv-song-title-text" title="${escapeHtml(song.title)}">${escapeHtml(song.title)}</div>
@@ -2060,7 +2060,7 @@ function renderSongsGridMarkup(chartSongs, activeTrackId, isPlaying) {
             >
               <div class="kv-song-grid-art">
                 <span class="kv-grid-rank-badge ${rankClass}">#${rank}</span>
-                <img src="${escapeHtml(song.image_url)}" alt="${escapeHtml(song.title)}" loading="lazy" onerror="this.src='/favicon.png'" />
+                <img src="${escapeHtml(song.image_url)}" alt="${escapeHtml(song.title)}" loading="lazy" onerror="this.src='/icon.svg';this.classList.add('kv-is-fallback-icon');" />
                 <span class="kv-grid-dur-badge">${formatDuration(song.duration)}</span>
                 <button
                   type="button"

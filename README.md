@@ -1,15 +1,15 @@
-# KV Suno — AI Music Streaming & Prompt Studio (v2.0.0)
+# KV Suno — AI Music Streaming & Prompt Studio (v2.0.2)
 
 **KV Suno (`kv-suno`)** là nền tảng nghe nhạc AI Suno trực tuyến và phòng thu thiết kế Prompt & Lời bài hát chuyên nghiệp (phiên bản **Spotify Encore Web Player & PWA Media Edition**), hoạt động độc lập với **bộ AI Engine cục bộ (Built-in Autonomous Engine)** mà không cần API Key bên ngoài.
 
 📦 **Synology Package Center**: [`https://syno.vndns.net/package/kvsuno`](https://syno.vndns.net/package/kvsuno)  
-🐳 **Docker Hub**: `vndangkhoa/kv-suno:latest` (`vndangkhoa/kv-suno:2.0.0`)  
+🐳 **Docker Hub**: `vndangkhoa/kv-suno:latest` (`vndangkhoa/kv-suno:2.0.2`)  
 🦊 **Forgejo**: [`https://git.khoavo.myds.me/vndangkhoa/kv-suno`](https://git.khoavo.myds.me/vndangkhoa/kv-suno)  
 📋 **Changelog**: Xem chi tiết lịch sử phiên bản tại [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
-## 🌟 Điểm nổi bật (v2.0.0)
+## 🌟 Điểm nổi bật (v2.0.2)
 
 - **🔥 Hot & Most Played Songs Chart (Mặc định khi mở ứng dụng)**:
   - Bảng xếp hạng các bài hát Suno AI thịnh hành và được nghe nhiều nhất, cập nhật trực tiếp từ cộng đồng 32 nhà sáng tạo.

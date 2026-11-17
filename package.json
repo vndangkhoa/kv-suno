@@ -1,6 +1,6 @@
 {
   "name": "kv-suno",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "KV Suno — AI Music Streaming & Prompt Studio (Spotify Encore Web Player & PWA Edition)",
   "type": "module",
   "main": "server/index.js",

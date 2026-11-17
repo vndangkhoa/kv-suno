@@ -6,13 +6,26 @@
   "start_url": "/?mode=songs",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#090b0e",
-  "theme_color": "#090b0e",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "lang": "vi",
   "categories": ["music", "entertainment", "multimedia", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/favicon.svg",
       "sizes": "any",
@@ -20,8 +33,38 @@
       "purpose": "any"
     },
     {
-      "src": "/favicon.png",
-      "sizes": "64x64",
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
       "type": "image/png",
       "purpose": "any"
     },
@@ -32,8 +75,44 @@
       "purpose": "any"
     },
     {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/pwa-192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
@@ -44,8 +123,8 @@
       "purpose": "any"
     },
     {
-      "src": "/pwa-maskable-192.png",
-      "sizes": "192x192",
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
@@ -62,21 +141,28 @@
       "short_name": "Hot Songs",
       "description": "Stream the Top 50 Suno AI Chart",
       "url": "/?mode=songs",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Creators Leaderboard",
       "short_name": "Creators",
       "description": "Explore Top 32 Vietnamese Suno Creators",
       "url": "/?mode=creators",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Prompt Studio",
       "short_name": "Studio",
       "description": "Compose Suno AI Style Prompts & Lyrics",
       "url": "/?mode=studio",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Liked Songs",
+      "short_name": "Liked",
+      "description": "Play your saved Suno AI reference tracks",
+      "url": "/?mode=liked",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
