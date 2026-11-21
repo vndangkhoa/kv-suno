@@ -679,21 +679,29 @@ fun FullPlayerScreen(
                         isDownloaded = isDownloaded
                     )
 
-                    Spacer(modifier = Modifier.weight(0.5f))
+                    Spacer(modifier = Modifier.weight(0.3f))
 
-                    PlayerVisualStage(
-                        track = activeTrack,
-                        isPlaying = isPlaying,
-                        isVisualizerMode = isVisualizerMode,
-                        waveformBars = waveformBars,
-                        loadLatencyMs = lastLoadLatencyMs,
+                    Box(
                         modifier = Modifier
+                            .weight(1f)
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                            .aspectRatio(1f)
-                    )
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        PlayerVisualStage(
+                            track = activeTrack,
+                            isPlaying = isPlaying,
+                            isVisualizerMode = isVisualizerMode,
+                            waveformBars = waveformBars,
+                            loadLatencyMs = lastLoadLatencyMs,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(1f, matchHeightConstraintsFirst = true)
+                                .sizeIn(maxWidth = 340.dp, maxHeight = 340.dp)
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.weight(0.6f))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     TrackMetaHeaderRow(
                         track = activeTrack,
@@ -729,7 +737,7 @@ fun FullPlayerScreen(
                         onSleepTimer = { showSleepTimerDialog = true }
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     PlayerSeekBar(
                         sliderValue = sliderValue,
@@ -745,13 +753,13 @@ fun FullPlayerScreen(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     PlayerTransportRow(
                         isPlaying = isPlaying,
                         isShuffle = isShuffle,
                         isRepeat = isRepeat,
-                        playButtonSize = 72,
+                        playButtonSize = 70,
                         onToggleShuffle = { PlayerManager.toggleShuffle() },
                         onPrev = { PlayerManager.playPrevious() },
                         onTogglePlay = { PlayerManager.togglePlayPause() },
@@ -759,9 +767,9 @@ fun FullPlayerScreen(
                         onToggleRepeat = { PlayerManager.toggleRepeat() }
                     )
 
-                    Spacer(modifier = Modifier.weight(0.5f))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    // Swipe-up / tap bottom dock bar (UP NEXT | LYRICS | DNA)
+                    // Swipe-up / tap bottom dock bar (UP NEXT | LYRICS | STYLE DNA)
                     Surface(
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                         color = SunoElevated,
@@ -791,19 +799,22 @@ fun FullPlayerScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                listOf("UP NEXT", "LYRICS", "DNA & RELATED").forEachIndexed { idx, label ->
+                                listOf("UP NEXT", "LYRICS", "STYLE DNA").forEachIndexed { idx, label ->
                                     Text(
                                         text = label,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 0.6.sp,
                                         color = if (selectedDockTab == idx) SunoEmerald else SunoTextSubdued,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier
                                             .clickable {
                                                 selectedDockTab = idx
                                                 showCompactBottomSheet = true
                                             }
-                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                            .padding(horizontal = 8.dp, vertical = 6.dp)
                                     )
                                 }
                             }
@@ -1455,7 +1466,7 @@ private fun DockedPanelTabsContent(
             listOf(
                 0 to "UP NEXT (${queue.size})",
                 1 to "LYRICS",
-                2 to "DNA & RELATED"
+                2 to "STYLE DNA"
             ).forEach { (idx, title) ->
                 val active = selectedTab == idx
                 Surface(
@@ -1473,6 +1484,7 @@ private fun DockedPanelTabsContent(
                         color = if (active) SunoEmerald else SunoTextSubdued,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
+                        softWrap = false,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp)
                     )

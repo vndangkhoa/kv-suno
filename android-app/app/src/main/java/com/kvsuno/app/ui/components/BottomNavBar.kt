@@ -9,21 +9,24 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
@@ -111,14 +114,16 @@ fun BottomNavBar(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(58.dp),
+        modifier = modifier.fillMaxWidth(),
         color = SunoBase,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,16 +131,14 @@ fun BottomNavBar(
                     .background(SunoWhite08)
             )
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
                     modifier = Modifier
                         .widthIn(max = 600.dp)
                         .fillMaxWidth()
-                        .fillMaxHeight(),
+                        .heightIn(min = 62.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     topLevelNavScreens.forEach { screen ->
@@ -148,8 +151,7 @@ fun BottomNavBar(
                         Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxHeight()
-                                .defaultMinSize(minWidth = 48.dp)
+                                .heightIn(min = 62.dp)
                                 .selectable(
                                     selected = isSelected,
                                     interactionSource = interactionSource,
@@ -157,7 +159,7 @@ fun BottomNavBar(
                                     role = Role.Tab,
                                     onClick = { onNavigate(screen.route) }
                                 )
-                                .padding(top = 5.dp, start = 2.dp, end = 2.dp),
+                                .padding(top = 6.dp, bottom = 6.dp, start = 1.dp, end = 1.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -166,14 +168,14 @@ fun BottomNavBar(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(if (isSelected) SunoEmeraldMuted else Color.Transparent)
-                                        .padding(horizontal = 10.dp, vertical = 2.dp),
+                                        .padding(horizontal = 10.dp, vertical = 3.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = tabIcon,
                                         contentDescription = screen.title,
                                         tint = tint,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                                 if (screen == NavScreen.Studio && studioTagCount > 0) {
@@ -193,14 +195,17 @@ fun BottomNavBar(
                                     }
                                 }
                             }
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = screen.title,
                                 style = YtmCaption03.copy(
+                                    fontSize = 11.sp,
+                                    lineHeight = 13.sp,
                                     color = labelColor,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 ),
                                 maxLines = 1,
+                                softWrap = false,
                                 overflow = TextOverflow.Ellipsis,
                                 textAlign = TextAlign.Center
                             )
@@ -221,7 +226,7 @@ fun AppNavigationRail(
 ) {
     Row(modifier = modifier.fillMaxHeight()) {
         NavigationRail(
-            modifier = Modifier.width(88.dp),
+            modifier = Modifier.width(92.dp),
             containerColor = SunoBase,
             contentColor = SunoTextPrimary,
             windowInsets = WindowInsets.systemBars.only(
@@ -230,7 +235,7 @@ fun AppNavigationRail(
             header = {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+                    modifier = Modifier.padding(top = 10.dp, bottom = 8.dp)
                 ) {
                     KvSunoBrandMark(modifier = Modifier.size(36.dp))
                     Spacer(modifier = Modifier.height(4.dp))
@@ -243,69 +248,79 @@ fun AppNavigationRail(
                 }
             }
         ) {
-            topLevelNavScreens.forEach { screen ->
-                val isSelected = currentRoute == screen.route
-                val tint = if (isSelected) SunoEmerald else SunoTextSubdued
-                val labelColor = if (isSelected) SunoTextPrimary else SunoTextSubdued
-                val tabIcon = if (isSelected) screen.icon else screen.unselectedIcon
-                val interactionSource = remember { MutableInteractionSource() }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                topLevelNavScreens.forEach { screen ->
+                    val isSelected = currentRoute == screen.route
+                    val tint = if (isSelected) SunoEmerald else SunoTextSubdued
+                    val labelColor = if (isSelected) SunoTextPrimary else SunoTextSubdued
+                    val tabIcon = if (isSelected) screen.icon else screen.unselectedIcon
+                    val interactionSource = remember { MutableInteractionSource() }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 64.dp)
-                        .selectable(
-                            selected = isSelected,
-                            interactionSource = interactionSource,
-                            indication = rememberRipple(bounded = false, color = SunoWhite20),
-                            role = Role.Tab,
-                            onClick = { onNavigate(screen.route) }
-                        )
-                        .padding(vertical = 6.dp)
-                ) {
-                    Box(contentAlignment = Alignment.TopEnd) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(if (isSelected) SunoEmeraldMuted else Color.Transparent)
-                                .padding(horizontal = 14.dp, vertical = 5.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = tabIcon,
-                                contentDescription = screen.title,
-                                tint = tint,
-                                modifier = Modifier.size(22.dp)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                            .selectable(
+                                selected = isSelected,
+                                interactionSource = interactionSource,
+                                indication = rememberRipple(bounded = false, color = SunoWhite20),
+                                role = Role.Tab,
+                                onClick = { onNavigate(screen.route) }
                             )
-                        }
-                        if (screen == NavScreen.Studio && studioTagCount > 0) {
+                            .padding(horizontal = 4.dp, vertical = 5.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.TopEnd) {
                             Box(
                                 modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(SunoEmerald),
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(if (isSelected) SunoEmeraldMuted else Color.Transparent)
+                                    .padding(horizontal = 14.dp, vertical = 5.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = studioTagCount.coerceAtMost(99).toString(),
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = SunoPureBlack
+                                Icon(
+                                    imageVector = tabIcon,
+                                    contentDescription = screen.title,
+                                    tint = tint,
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
+                            if (screen == NavScreen.Studio && studioTagCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clip(CircleShape)
+                                        .background(SunoEmerald),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = studioTagCount.coerceAtMost(99).toString(),
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SunoPureBlack
+                                    )
+                                }
+                            }
                         }
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = screen.title,
+                            fontSize = 11.sp,
+                            lineHeight = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = labelColor,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center
+                        )
                     }
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = screen.title,
-                        fontSize = 11.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = labelColor,
-                        maxLines = 1,
-                        softWrap = false
-                    )
                 }
             }
         }

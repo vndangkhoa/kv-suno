@@ -3,6 +3,7 @@ package com.kvsuno.app.ui.screens.detail
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -103,6 +104,8 @@ fun DetailScreen(
 
     val likedIds by PlayerManager.likedTrackIds.collectAsState()
     val downloadedIds by PlayerManager.downloadedTrackIds.collectAsState()
+
+    BackHandler(onBack = onBack)
 
     val isArtist = type.equals("artist", ignoreCase = true) || type.equals("creator", ignoreCase = true)
 
@@ -366,23 +369,27 @@ fun DetailScreen(
                 }
             }
             Spacer(modifier = Modifier.height(18.dp))
+            val circleBtnSize = if (windowState.isLandscapeTwoPaneWatch) 40.dp else 44.dp
+            val playBtnSize = if (windowState.isLandscapeTwoPaneWatch) 50.dp else 56.dp
             Row(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (windowState.isLandscapeTwoPaneWatch) 10.dp else 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SunoDetailCircleButton(
                     icon = if (allDownloaded) YtmIcons.Downloaded24 else YtmIcons.Download24,
                     contentDescription = "Download all",
+                    buttonSize = circleBtnSize,
                     onClick = { if (tracks.isNotEmpty()) PlayerManager.downloadTracks(context, tracks) }
                 )
                 SunoDetailCircleButton(
                     icon = YtmIcons.PlaylistAdd24,
                     contentDescription = "Save playlist",
+                    buttonSize = circleBtnSize,
                     onClick = { saveToLibraryPlaylist() }
                 )
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(playBtnSize)
                         .clip(CircleShape)
                         .background(SunoEmerald)
                         .clickable {
@@ -394,12 +401,13 @@ fun DetailScreen(
                         imageVector = YtmIcons.Play36,
                         contentDescription = "Play all",
                         tint = SunoPureBlack,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
                 SunoDetailCircleButton(
                     icon = YtmIcons.Shuffle24,
                     contentDescription = "Shuffle",
+                    buttonSize = circleBtnSize,
                     onClick = {
                         val shuffled = tracks.shuffled()
                         shuffled.firstOrNull()?.let { first -> PlayerManager.playTrack(first, shuffled) }
@@ -408,6 +416,7 @@ fun DetailScreen(
                 SunoDetailCircleButton(
                     icon = YtmIcons.Share24,
                     contentDescription = "Share",
+                    buttonSize = circleBtnSize,
                     onClick = { shareEntity() }
                 )
             }
@@ -434,12 +443,18 @@ fun DetailScreen(
         } else if (windowState.isLandscapeTwoPaneWatch) {
             // Wide Tablet / Foldable Landscape: 2-Pane Split (Left Hero Card, Right Tracklist)
             Row(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
+                val leftPaneModifier = if (windowState.isBook && windowState.hingeStartDp > 220f) {
+                    Modifier
+                        .width(windowState.hingeStartDp.dp)
+                        .fillMaxHeight()
+                        .background(SunoBase)
+                } else {
+                    Modifier
                         .weight(0.42f)
                         .fillMaxHeight()
                         .background(SunoBase)
-                ) {
+                }
+                Box(modifier = leftPaneModifier) {
                     if (resolvedCover.isNotBlank()) {
                         AsyncImage(
                             model = resolvedCover,
@@ -472,9 +487,13 @@ fun DetailScreen(
                     }
                 }
 
+                if (windowState.isBook && windowState.hingeWidthDp > 0f) {
+                    Spacer(modifier = Modifier.width(windowState.hingeWidthDp.dp))
+                }
+
                 LazyColumn(
                     modifier = Modifier
-                        .weight(0.58f)
+                        .weight(if (windowState.isBook && windowState.hingeStartDp > 220f) 1f else 0.58f)
                         .fillMaxHeight()
                         .statusBarsPadding(),
                     contentPadding = PaddingValues(top = 12.dp, bottom = 28.dp)
@@ -512,16 +531,14 @@ fun DetailScreen(
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(410.dp)
+                                    .matchParentSize()
                                     .alpha(0.38f)
                                     .blur(40.dp)
                             )
                         }
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(420.dp)
+                                .matchParentSize()
                                 .background(
                                     Brush.verticalGradient(
                                         colors = listOf(
@@ -578,11 +595,12 @@ fun DetailScreen(
 private fun SunoDetailCircleButton(
     icon: ImageVector,
     contentDescription: String,
+    buttonSize: androidx.compose.ui.unit.Dp = 44.dp,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(buttonSize)
             .clip(CircleShape)
             .background(SunoWhite10)
             .clickable(onClick = onClick),

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -391,23 +392,25 @@ fun HomeScreen(
                                 },
                                 shape = RoundedCornerShape(16.dp),
                                 color = SunoEmerald,
-                                modifier = Modifier.height(32.dp)
+                                modifier = Modifier.heightIn(min = 32.dp)
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.padding(horizontal = 14.dp)
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                                 ) {
                                     Text(
                                         text = "Play all",
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = SunoPureBlack
+                                        color = SunoPureBlack,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
                         }
 
-                        val colWidth = if (windowState.isWide) 350.dp else 312.dp
+                        val colWidth = if (windowState.isWide) 350.dp else (windowState.widthDp - 44).coerceIn(260, 336).dp
                         val columns = remember(quickPicks) { quickPicks.chunked(4) }
                         LazyRow(
                             state = quickPicksCarouselState,
@@ -621,17 +624,19 @@ fun HomeScreen(
                                 shape = RoundedCornerShape(16.dp),
                                 color = Color.Transparent,
                                 border = BorderStroke(1.dp, SunoWhite20),
-                                modifier = Modifier.height(32.dp)
+                                modifier = Modifier.heightIn(min = 32.dp)
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.padding(horizontal = 14.dp)
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                                 ) {
                                     Text(
                                         text = "Play all",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
-                                        color = SunoTextPrimary
+                                        color = SunoTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
@@ -721,20 +726,28 @@ private fun KvSunoHomeToolbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .padding(horizontal = 16.dp),
+            .heightIn(min = 52.dp)
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .padding(end = 6.dp)
+        ) {
             KvSunoBrandMark(modifier = Modifier.size(30.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "KV Suno",
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
                 style = TextStyle(
                     fontFamily = YouTubeSansFontFamily,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
+                    fontSize = 21.sp,
                     letterSpacing = (-0.04).em,
                     color = SunoTextPrimary
                 )
@@ -749,6 +762,8 @@ private fun KvSunoHomeToolbar(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = SunoEmerald,
+                    maxLines = 1,
+                    softWrap = false,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
@@ -756,17 +771,17 @@ private fun KvSunoHomeToolbar(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Surface(
                 onClick = onStudioClick,
                 shape = RoundedCornerShape(16.dp),
                 color = if (studioTagCount > 0) SunoEmerald else SunoTinted,
                 border = BorderStroke(1.dp, if (studioTagCount > 0) SunoEmerald else SunoWhite10),
-                modifier = Modifier.height(30.dp)
+                modifier = Modifier.heightIn(min = 30.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -780,38 +795,40 @@ private fun KvSunoHomeToolbar(
                         text = if (studioTagCount > 0) "Studio ($studioTagCount)" else "Studio",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (studioTagCount > 0) SunoPureBlack else SunoTextPrimary
+                        color = if (studioTagCount > 0) SunoPureBlack else SunoTextPrimary,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
 
             IconButton(
                 onClick = onCastClick,
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size(34.dp)
             ) {
                 Icon(
                     imageVector = YtmIcons.Cast24,
                     contentDescription = "Cast",
                     tint = SunoTextPrimary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(21.dp)
                 )
             }
 
             IconButton(
                 onClick = onSearchClick,
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size(34.dp)
             ) {
                 Icon(
                     imageVector = YtmIcons.SearchOutline,
                     contentDescription = "Search",
                     tint = SunoTextPrimary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(21.dp)
                 )
             }
 
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(34.dp)
                     .clip(CircleShape)
                     .clickable(onClick = onProfileClick),
                 contentAlignment = Alignment.Center
@@ -847,18 +864,19 @@ private fun SunoFilterChip(
         shape = RoundedCornerShape(16.dp),
         color = if (isSelected) SunoEmerald else SunoWhite10,
         border = if (isSelected) null else BorderStroke(1.dp, SunoWhite08),
-        modifier = Modifier.height(32.dp)
+        modifier = Modifier.heightIn(min = 32.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(horizontal = 13.dp)
+            modifier = Modifier.padding(horizontal = 13.dp, vertical = 6.dp)
         ) {
             Text(
                 text = label,
                 fontSize = 13.5.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 color = if (isSelected) SunoPureBlack else SunoTextPrimary,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false
             )
         }
     }

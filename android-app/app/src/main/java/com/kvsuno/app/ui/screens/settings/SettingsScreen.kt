@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -232,12 +234,16 @@ fun SettingsScreen(
                         enabled = !isCheckingServer,
                         border = BorderStroke(1.dp, SunoWhite20),
                         shape = RoundedCornerShape(24.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
                             text = if (isCheckingServer) "Checking..." else "Test Server",
                             color = SunoTextPrimary,
-                            fontSize = 13.sp
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     Button(
@@ -246,14 +252,15 @@ fun SettingsScreen(
                             saveSuccess = true
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = SunoEmerald, contentColor = SunoPureBlack),
-                        shape = RoundedCornerShape(24.dp)
+                        shape = RoundedCornerShape(24.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
                     ) {
                         if (saveSuccess) {
                             Icon(YtmIcons.Check24, contentDescription = null, tint = SunoPureBlack, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Saved", fontWeight = FontWeight.Bold)
+                            Text("Saved", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                         } else {
-                            Text("Save Host", fontWeight = FontWeight.Bold)
+                            Text("Save Host", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                         }
                     }
                 }
@@ -422,7 +429,12 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp)
+                    ) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = null, tint = SunoEmerald, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
@@ -436,9 +448,10 @@ fun SettingsScreen(
                             Toast.makeText(context, "Audio cache cleared", Toast.LENGTH_SHORT).show()
                         },
                         border = BorderStroke(1.dp, SunoWhite20),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Text("Clear", color = SunoTextPrimary)
+                        Text("Clear", color = SunoTextPrimary, maxLines = 1, softWrap = false)
                     }
                 }
             }
@@ -491,16 +504,17 @@ fun SettingsScreen(
                             contentColor = SunoPureBlack
                         ),
                         shape = RoundedCornerShape(24.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                         modifier = Modifier.weight(1f)
                     ) {
                         if (updateState is UpdateUiState.Checking) {
                             CircularProgressIndicator(color = SunoPureBlack, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Checking...", fontWeight = FontWeight.Bold)
+                            Text("Checking...", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                         } else {
                             Icon(Icons.Default.Refresh, contentDescription = null, tint = SunoPureBlack, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Check for updates", fontWeight = FontWeight.Bold)
+                            Text("Check for updates", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                         }
                     }
 
@@ -512,11 +526,12 @@ fun SettingsScreen(
                             },
                             border = BorderStroke(1.dp, SunoEmerald),
                             shape = RoundedCornerShape(24.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(YtmIcons.Download24, contentDescription = null, tint = SunoEmerald, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Download APK", color = SunoEmerald, fontWeight = FontWeight.Bold)
+                            Text("Download APK", color = SunoEmerald, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }

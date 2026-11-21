@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -511,7 +512,7 @@ fun SearchScreen(
                                     Row(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(48.dp)
+                                            .heightIn(min = 48.dp)
                                             .clip(RoundedCornerShape(6.dp))
                                             .background(SunoElevated)
                                             .clickable {
@@ -525,7 +526,7 @@ fun SearchScreen(
                                         Box(
                                             modifier = Modifier
                                                 .width(6.dp)
-                                                .fillMaxHeight()
+                                                .height(48.dp)
                                                 .background(tile.stripeColor)
                                         )
                                         Text(
@@ -535,7 +536,7 @@ fun SearchScreen(
                                             color = SunoTextPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.padding(horizontal = 12.dp)
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
                                         )
                                     }
                                 }
@@ -682,14 +683,16 @@ fun SearchScreen(
                             shape = RoundedCornerShape(16.dp),
                             color = if (isSelected) SunoEmerald else SunoWhite10,
                             border = if (isSelected) null else BorderStroke(1.dp, SunoWhite08),
-                            modifier = Modifier.height(32.dp)
+                            modifier = Modifier.heightIn(min = 32.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp)) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                                 Text(
                                     text = tab,
                                     fontSize = 13.5.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) SunoPureBlack else SunoTextPrimary
+                                    color = if (isSelected) SunoPureBlack else SunoTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
@@ -905,13 +908,13 @@ private fun SunoExploreNavButton(
         shape = RoundedCornerShape(8.dp),
         color = SunoElevated,
         border = BorderStroke(1.dp, SunoWhite08),
-        modifier = modifier.height(58.dp)
+        modifier = modifier.heightIn(min = 60.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 9.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Icon(
@@ -926,6 +929,7 @@ private fun SunoExploreNavButton(
                 fontWeight = FontWeight.SemiBold,
                 color = SunoTextPrimary,
                 maxLines = 1,
+                softWrap = false,
                 overflow = TextOverflow.Ellipsis
             )
         }

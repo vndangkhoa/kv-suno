@@ -58,7 +58,8 @@ data class WindowState(
     val isBook: Boolean get() = foldPosture == FoldPosture.Book
     val useNavigationRail: Boolean get() = (isWide && isLandscape) || widthClass == WidthClass.Expanded
     val isFoldablePortraitWatch: Boolean get() = isWide && !isLandscape && !isBook
-    val isLandscapeTwoPaneWatch: Boolean get() = (isWide && isLandscape) || isBook
+    val isLandscapeTwoPaneWatch: Boolean
+        get() = (isWide && isLandscape) || isBook || (isLandscape && widthDp >= 520 && heightDp < 480)
 }
 
 val LocalWidthClass = compositionLocalOf { WidthClass.Compact }

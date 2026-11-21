@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +20,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -220,6 +222,13 @@ private fun KVSunoMainShell() {
         }
     }
 
+    BackHandler(enabled = isPlayerExpanded || detailArgs != null) {
+        when {
+            isPlayerExpanded -> isPlayerExpanded = false
+            detailArgs != null -> detailArgs = null
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -264,6 +273,7 @@ private fun KVSunoMainShell() {
             // Compact Phone Chrome
             Scaffold(
                 containerColor = SunoPureBlack,
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 bottomBar = {
                     Column(modifier = Modifier.background(SunoPureBlack)) {
                         MiniPlayer(

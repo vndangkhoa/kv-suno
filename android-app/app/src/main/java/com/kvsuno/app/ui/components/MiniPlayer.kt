@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -200,7 +201,9 @@ fun MiniPlayer(
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = SunoEmeraldMuted,
-                                    modifier = Modifier.padding(end = 8.dp)
+                                    modifier = Modifier
+                                        .widthIn(max = 112.dp)
+                                        .padding(end = 8.dp)
                                 ) {
                                     Text(
                                         text = track.primaryGenreTag,
@@ -208,6 +211,8 @@ fun MiniPlayer(
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                     )
                                 }

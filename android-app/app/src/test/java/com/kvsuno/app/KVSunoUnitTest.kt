@@ -72,6 +72,12 @@ class KVSunoUnitTest {
         assertTrue(tablet.isLandscape)
         assertTrue(tablet.isLandscapeTwoPaneWatch)
         assertTrue(tablet.useNavigationRail)
+
+        // Rotated compact phone landscape uses 2-pane player/studio split to avoid vertical clipping
+        val compactLandscape = computeWindowState(widthDp = 560, heightDp = 360)
+        assertTrue(compactLandscape.isCompact)
+        assertTrue(compactLandscape.isLandscape)
+        assertTrue(compactLandscape.isLandscapeTwoPaneWatch)
     }
 
     @Test

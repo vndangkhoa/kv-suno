@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -201,44 +202,50 @@ fun PromptStudioScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                Button(
+                    onClick = {
+                        val active = customPromptText.ifBlank { studioTags.joinToString(", ") }
+                        isScoring = true
+                        coroutineScope.launch {
+                            scoreResult = musicRepo.optimizePrompt(active, lyricLanguage)
+                            styleExplanation = musicRepo.explainStyle("Studio Prompt", active, lyricLanguage).explanation
+                            isScoring = false
+                        }
+                    },
+                    enabled = !isScoring,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = SunoEmerald,
+                        contentColor = SunoPureBlack
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 42.dp)
+                ) {
+                    if (isScoring) {
+                        CircularProgressIndicator(color = SunoPureBlack, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                    } else {
+                        Text("Score & Optimize", fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, softWrap = false)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            val active = customPromptText.ifBlank { studioTags.joinToString(", ") }
-                            isScoring = true
-                            coroutineScope.launch {
-                                scoreResult = musicRepo.optimizePrompt(active, lyricLanguage)
-                                styleExplanation = musicRepo.explainStyle("Studio Prompt", active, lyricLanguage).explanation
-                                isScoring = false
-                            }
-                        },
-                        enabled = !isScoring,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SunoEmerald,
-                            contentColor = SunoPureBlack
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        if (isScoring) {
-                            CircularProgressIndicator(color = SunoPureBlack, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
-                        } else {
-                            Text("Score & Optimize", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
-                        }
-                    }
-
                     OutlinedButton(
                         onClick = {
                             val active = customPromptText.ifBlank { studioTags.joinToString(", ") }
                             copyToClipboard("Suno Style Prompt", active)
                         },
                         border = BorderStroke(1.dp, SunoWhite20),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Copy", color = SunoTextPrimary, fontSize = 12.5.sp)
+                        Text("Copy Prompt", color = SunoTextPrimary, fontSize = 12.5.sp, maxLines = 1, softWrap = false)
                     }
 
                     OutlinedButton(
@@ -248,18 +255,25 @@ fun PromptStudioScreen(
                             }
                         },
                         border = BorderStroke(1.dp, SunoWhite20),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Save", color = SunoEmerald, fontSize = 12.5.sp)
+                        Text("Save Preset", color = SunoEmerald, fontSize = 12.5.sp, maxLines = 1, softWrap = false)
                     }
 
                     if (customPromptText.isNotBlank() || studioTags.isNotEmpty()) {
-                        IconButton(onClick = {
-                            musicRepo.clearStudio()
-                            scoreResult = null
-                            styleExplanation = null
-                        }) {
-                            Icon(YtmIcons.CloseX24, contentDescription = "Clear", tint = SunoTextSubdued)
+                        OutlinedButton(
+                            onClick = {
+                                musicRepo.clearStudio()
+                                scoreResult = null
+                                styleExplanation = null
+                            },
+                            border = BorderStroke(1.dp, SunoWhite20),
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Text("Clear", color = SunoTextSubdued, fontSize = 12.5.sp, maxLines = 1, softWrap = false)
                         }
                     }
                 }
@@ -538,7 +552,10 @@ fun PromptStudioScreen(
                                     text = item.name,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = SunoTextPrimary
+                                    color = SunoTextPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Surface(shape = RoundedCornerShape(4.dp), color = SunoTinted) {
@@ -546,6 +563,8 @@ fun PromptStudioScreen(
                                         text = item.category,
                                         fontSize = 10.sp,
                                         color = SunoEmerald,
+                                        maxLines = 1,
+                                        softWrap = false,
                                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                                     )
                                 }
@@ -567,6 +586,8 @@ fun PromptStudioScreen(
                                 color = SunoEmerald,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
                         }
@@ -614,19 +635,29 @@ fun PromptStudioScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(if (windowState.isBook && windowState.hingeWidthDp > 0f) 0.dp else 16.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier
+                val leftModifier = if (windowState.isBook && windowState.hingeStartDp > 220f) {
+                    Modifier
+                        .width((windowState.hingeStartDp - 32f).coerceAtLeast(240f).dp)
+                        .fillMaxHeight()
+                } else {
+                    Modifier
                         .weight(0.52f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                }
+                LazyColumn(
+                    modifier = leftModifier,
                     contentPadding = PaddingValues(bottom = 28.dp)
                 ) {
                     item { studioComposerBlock() }
                 }
+                if (windowState.isBook && windowState.hingeWidthDp > 0f) {
+                    Spacer(modifier = Modifier.width(windowState.hingeWidthDp.dp))
+                }
                 LazyColumn(
                     modifier = Modifier
-                        .weight(0.48f)
+                        .weight(if (windowState.isBook && windowState.hingeStartDp > 220f) 1f else 0.48f)
                         .fillMaxHeight(),
                     contentPadding = PaddingValues(bottom = 28.dp)
                 ) {
