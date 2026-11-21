@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- KV Suno Spotify Zen Color Tokens -->
+    <color name="suno_black">#000000</color>
+    <color name="suno_base">#121212</color>
+    <color name="suno_elevated">#181818</color>
+    <color name="suno_tinted">#1F1F1F</color>
+    <color name="suno_highlight">#282828</color>
+    <color name="suno_emerald">#1ED760</color>
+    <color name="suno_emerald_bright">#24E56A</color>
+    <color name="suno_emerald_deep">#0D8A3B</color>
+    <color name="suno_white">#FFFFFF</color>
+    <color name="suno_subdued">#B3B3B3</color>
+</resources>

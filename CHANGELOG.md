@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.3] - 2026-11-21
+
+### 📱 Native Android App (Phone, Foldable Tabletop/Book & Tablet Edition)
+- **Full Native Kotlin & Jetpack Compose Material 3 Android App (`android-app/`)**:
+  - Designed on the proven KV Music phone/adaptable shell layout re-themed in **KV Suno Spotify Zen Emerald (`#000000`, `#121212`, `#181818`, `#1ED760`)**.
+  - **Adaptive Foldable & Tablet Layouts (`WindowSize.kt` + `androidx.window:window:1.3.0`)**:
+    - *Compact Phone (`<600dp`)*: `BottomNavBar` + full-width `MiniPlayer` + swipe-up `UP NEXT | LYRICS | DNA & RELATED` sheet.
+    - *Unfolded Foldable Portrait (`600–839dp`)*: Left `AppNavigationRail` with live Studio tag counter, 2-column grids, and docked lower player tabs.
+    - *Foldable Half-Open Tabletop (`FoldPosture.Tabletop`)*: Upper display shows Artwork / Harmonic Visualizer above the physical hinge crease; lower deck houses Tabletop Flex transport controls and docked `UP NEXT | LYRICS | DNA & RELATED` tabs.
+    - *Foldable Half-Open Book & Tablet Landscape (`FoldPosture.Book` / `>=840dp`)*: Left `AppNavigationRail`, floating wide `MiniPlayer`, 3–4 column media grids, and 2-pane side-by-side Full Player honoring hardware hinge bounds.
+  - **Media3 ExoPlayer Background Playback & Direct CDN Failover**:
+    - 250 MiB LRU `SimpleCache` (`AudioCacheManager`) with 256 KiB preloading, automatic failover from `https://suno.khoavo.myds.me` to `https://cdn1.suno.ai/<id>.mp4` & `studio-api.prod.suno.com`, and offline saves to `Music/KV Suno`.
+  - **Interactive Prompt Studio, Lyrics Engine & Style DNA Inspector**:
+    - 5-pillar local Prompt Optimizer (`Genre`, `Mood`, `Instruments`, `Vocals`, `Mixing`), AI Lyrics Generator, Sound Wiki tag catalog, and 1-tap `+ tag` / `+ Load Full Style` injection from any playing track.
+
+---
+
 ## [2.0.2] - 2026-11-17
 
 ### 🎨 Unified Brand Logo, PWA Manifest & Media Control Card Consistency

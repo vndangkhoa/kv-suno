@@ -5,3 +5,7 @@ node_modules/
 npm-debug.log*
 .DS_Store
 *.bak
+android-app/local.properties
+android-app/.gradle/
+android-app/app/build/
+android-app/.kotlin/
